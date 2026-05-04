@@ -1,0 +1,37 @@
+<app-app-shell>
+  <section class="notifications-page">
+    <div class="page-header">
+      <h2>Notifications</h2>
+      <p>Track task updates, applications, and matching results.</p>
+    </div>
+
+    <div class="notifications-list" *ngIf="notifications.length > 0; else noNotifications">
+      <div
+        class="notification-card"
+        *ngFor="let notification of notifications"
+        [class.unread]="!notification.read"
+      >
+        <div>
+          <h3>{{ notification.title }}</h3>
+          <p>{{ notification.message }}</p>
+          <small>{{ notification.createdAt | date:'short' }}</small>
+        </div>
+
+        <button
+          type="button"
+          *ngIf="!notification.read"
+          (click)="markAsRead(notification.id)"
+        >
+          Mark as read
+        </button>
+      </div>
+    </div>
+
+    <ng-template #noNotifications>
+      <div class="empty-state">
+        <h3>No notifications yet</h3>
+        <p>Updates will appear here when users interact with your tasks.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

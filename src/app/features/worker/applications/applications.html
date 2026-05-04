@@ -1,0 +1,28 @@
+<app-app-shell>
+  <section class="applications-page">
+    <div class="page-header">
+      <h2>My Applications</h2>
+      <p>Track the tasks you have applied for.</p>
+    </div>
+
+    <div class="applications-list" *ngIf="applications.length > 0; else noApplications">
+      <div class="application-card" *ngFor="let app of applications">
+        <h3>{{ app.taskTitle }}</h3>
+
+        <div class="application-meta">
+          <span><strong>Location:</strong> {{ app.taskLocation }}</span>
+          <span><strong>Type:</strong> {{ app.taskType }}</span>
+          <span><strong>Budget:</strong> {{ app.taskBudget }} EGP</span>
+          <span><strong>Status:</strong> {{ app.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noApplications>
+      <div class="empty-state">
+        <h3>No applications yet</h3>
+        <p>You have not applied to any tasks yet.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

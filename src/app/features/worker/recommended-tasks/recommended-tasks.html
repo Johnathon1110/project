@@ -1,0 +1,52 @@
+<app-app-shell>
+  <section class="recommended-page">
+    <div class="page-header">
+      <h2>Recommended Tasks</h2>
+      <p>Tasks matched to your skills and profile.</p>
+    </div>
+
+    <div *ngIf="!hasProfile" class="empty-state">
+      <h3>Complete your profile first</h3>
+      <p>Add your skills to get task recommendations.</p>
+      <a routerLink="/worker/profile" class="profile-btn">Go to Profile</a>
+    </div>
+
+    <div *ngIf="hasProfile && recommendedTasks.length > 0; else noRecommendations" class="tasks-grid">
+      <div class="task-card" *ngFor="let task of recommendedTasks">
+        <div class="task-top">
+          <h3>{{ task.title }}</h3>
+          <span class="match-score">{{ task.matchScore }}% Match</span>
+        </div>
+
+        <p class="task-description">{{ task.description }}</p>
+
+        <div class="task-meta">
+          <span><strong>Category:</strong> {{ task.category }}</span>
+          <span><strong>Type:</strong> {{ task.type }}</span>
+          <span><strong>Location:</strong> {{ task.location }}</span>
+          <span><strong>Budget:</strong> {{ task.budget }} EGP</span>
+        </div>
+
+        <div class="matched-skills">
+          <strong>Matched Skills:</strong>
+          <div class="skills-list">
+            <span class="skill-badge" *ngFor="let skill of task.matchedSkills">
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+
+        <a class="details-btn" [routerLink]="['/worker/task-details', task.id]">
+          View Details
+        </a>
+      </div>
+    </div>
+
+    <ng-template #noRecommendations>
+      <div class="empty-state" *ngIf="hasProfile">
+        <h3>No matching tasks yet</h3>
+        <p>We could not find tasks matching your current skills.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

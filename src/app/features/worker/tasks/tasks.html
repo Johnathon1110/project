@@ -1,0 +1,50 @@
+<app-app-shell>
+  <section class="tasks-page">
+    <div class="tasks-header">
+      <h2>Available Tasks</h2>
+      <p>Browse available temporary jobs and find the right one for you.</p>
+    </div>
+
+    <div class="tasks-grid" *ngIf="tasks.length > 0; else noTasks">
+      <div class="task-card" *ngFor="let task of tasks">
+        <div class="task-header">
+          <div>
+            <h3>{{ task.title }}</h3>
+          </div>
+
+          <span
+            class="task-status"
+            [class.open]="task.status === 'open'"
+            [class.progress]="task.status === 'in-progress'"
+            [class.completed]="task.status === 'completed'"
+          >
+            {{ task.status }}
+          </span>
+        </div>
+
+        <div class="task-summary">
+          <div class="summary-item">
+            <span>Budget</span>
+            <strong>{{ task.budget }} EGP</strong>
+          </div>
+
+          <div class="summary-item">
+            <span>Date</span>
+            <strong>{{ task.date }}</strong>
+          </div>
+        </div>
+
+        <a class="view-btn" [routerLink]="['/worker/task-details', task.id]">
+          View Details
+        </a>
+      </div>
+    </div>
+
+    <ng-template #noTasks>
+      <div class="empty-state">
+        <h3>No tasks available</h3>
+        <p>Check back later for new opportunities.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

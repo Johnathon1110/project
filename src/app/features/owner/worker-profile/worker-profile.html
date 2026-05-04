@@ -1,0 +1,127 @@
+<app-app-shell>
+  <section class="worker-profile-page" *ngIf="worker; else notFound">
+    <div class="profile-layout">
+      <main class="profile-main">
+        <div class="profile-hero">
+          <div class="cover"></div>
+
+          <div class="hero-content">
+            <div class="avatar">{{ getInitial() }}</div>
+
+            <div class="user-title">
+              <span class="role-badge">Worker Profile</span>
+              <h2>{{ worker.fullName || worker.name }}</h2>
+              <p>📍 {{ worker.location || 'No location added' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>⭐</span>
+            <h3>{{ worker.rating || 0 }}</h3>
+            <p>Rating</p>
+          </div>
+
+          <div class="stat-card">
+            <span>✅</span>
+            <h3>{{ worker.completedTasks || 0 }}</h3>
+            <p>Completed Tasks</p>
+          </div>
+
+          <div class="stat-card">
+            <span>💼</span>
+            <h3>{{ getSkills().length }}</h3>
+            <p>Skills</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Worker Information</h3>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Email</label>
+              <p>{{ worker.email }}</p>
+            </div>
+
+            <div class="info-item">
+              <label>Phone</label>
+              <p>{{ worker.phone || '-' }}</p>
+            </div>
+
+            <div class="info-item">
+              <label>Experience</label>
+              <p>{{ worker.experience || '-' }}</p>
+            </div>
+
+            <div class="info-item">
+              <label>Availability</label>
+              <p>{{ worker.availability || '-' }}</p>
+            </div>
+          </div>
+
+          <div class="skills-section">
+            <label>Skills</label>
+
+            <div class="skills-tags" *ngIf="getSkills().length > 0; else noSkills">
+              <span *ngFor="let skill of getSkills()">{{ skill }}</span>
+            </div>
+
+            <ng-template #noSkills>
+              <p>No skills added yet.</p>
+            </ng-template>
+          </div>
+        </div>
+      </main>
+
+      <aside class="reviews-card">
+        <h3>Reviews</h3>
+        <p>Feedback from task owners</p>
+
+        <div class="review-item" *ngFor="let review of reviews">
+          <div class="review-head">
+            <strong>{{ getReviewerName(review.reviewerId) }}</strong>
+            <span>{{ '⭐'.repeat(review.rating) }}</span>
+          </div>
+          <p>{{ review.comment }}</p>
+        </div>
+
+        <div class="empty-reviews" *ngIf="reviews.length === 0">
+          No reviews yet.
+        </div>
+
+        <div class="add-review">
+          <h4>Add Review</h4>
+
+          <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+            <label>Rating</label>
+            <select formControlName="rating">
+              <option [value]="1">1 Star</option>
+              <option [value]="2">2 Stars</option>
+              <option [value]="3">3 Stars</option>
+              <option [value]="4">4 Stars</option>
+              <option [value]="5">5 Stars</option>
+            </select>
+
+            <label>Comment</label>
+            <textarea formControlName="comment" rows="3" placeholder="Write your review"></textarea>
+
+            <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+
+            <button type="submit">Submit Review</button>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <ng-template #notFound>
+    <section class="worker-profile-page">
+      <div class="info-card">
+        <h2>Worker not found</h2>
+        <p>This worker profile does not exist.</p>
+      </div>
+    </section>
+  </ng-template>
+</app-app-shell>

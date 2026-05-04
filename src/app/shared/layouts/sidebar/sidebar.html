@@ -1,0 +1,73 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">S</div>
+    <div>
+      <h2>SmartTask Connect</h2>
+      <p>AI work platform</p>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <p class="section-title">Main</p>
+
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="sidebar-link"
+    >
+      Home
+    </a>
+
+    <a *ngIf="userRole === 'admin'" routerLink="/admin/dashboard" routerLinkActive="active" class="sidebar-link">
+      Admin Dashboard
+    </a>
+
+    <!-- Worker Links -->
+    <a *ngIf="userRole === 'worker'" routerLink="/worker/dashboard" routerLinkActive="active" class="sidebar-link">
+      Worker Dashboard
+    </a>
+
+    <a *ngIf="userRole === 'worker'" routerLink="/worker/tasks" routerLinkActive="active" class="sidebar-link">
+      Tasks
+    </a>
+
+    <a *ngIf="userRole === 'worker'" routerLink="/worker/recommended" routerLinkActive="active" class="sidebar-link">
+      Recommended Tasks
+    </a>
+
+    <a *ngIf="userRole === 'worker'" routerLink="/worker/applications" routerLinkActive="active" class="sidebar-link">
+      My Applications
+    </a>
+
+    <a *ngIf="userRole === 'worker'" routerLink="/worker/profile" routerLinkActive="active" class="sidebar-link">
+      Profile
+    </a>
+
+    <!-- Owner Links -->
+    <a *ngIf="userRole === 'owner'" routerLink="/owner/dashboard" routerLinkActive="active" class="sidebar-link">
+      Owner Dashboard
+    </a>
+
+    <a *ngIf="userRole === 'owner'" routerLink="/owner/post-task" routerLinkActive="active" class="sidebar-link">
+      Post Task
+    </a>
+
+    <a *ngIf="userRole === 'owner'" routerLink="/owner/my-tasks" routerLinkActive="active" class="sidebar-link">
+      My Tasks
+    </a>
+  </div>
+
+  <div class="sidebar-section second" *ngIf="userRole !== 'admin'">
+    <p class="section-title">Shared</p>
+
+    <a routerLink="/chat" routerLinkActive="active" class="sidebar-link">Chat</a>
+    <a routerLink="/notifications" routerLinkActive="active" class="sidebar-link">Notifications</a>
+  </div>
+
+  <div class="sidebar-section logout-section">
+    <button class="sidebar-link logout-btn" type="button" (click)="logout()">
+      Logout
+    </button>
+  </div>
+</aside>

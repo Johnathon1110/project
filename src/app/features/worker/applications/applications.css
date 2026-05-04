@@ -1,0 +1,49 @@
+.applications-page {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.applications-list {
+  display: grid;
+  gap: 16px;
+}
+
+.application-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.application-card h3 {
+  margin: 0 0 14px;
+}
+
+.application-meta {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.empty-state {
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+}

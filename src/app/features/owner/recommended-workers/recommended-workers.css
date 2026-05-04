@@ -1,0 +1,155 @@
+.recommended-workers-page {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  color: #0f172a;
+}
+
+.page-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.workers-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.worker-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.worker-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.worker-top h3 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.worker-top p {
+  margin: 0;
+  color: #64748b;
+}
+
+.match-score {
+  height: fit-content;
+  background: #dcfce7;
+  color: #166534;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.worker-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.meta-item span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.meta-item strong {
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.skills {
+  margin-bottom: 16px;
+}
+
+.skills strong {
+  color: #334155;
+}
+
+.skills-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.skill-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.worker-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.profile-btn,
+.message-btn {
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-btn {
+  background: #111827;
+  color: white;
+}
+
+.message-btn {
+  border: none;
+  background: #dbeafe;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  border: 1px dashed #d1d5db;
+  border-radius: 16px;
+  background: #fff;
+}
+
+@media (max-width: 700px) {
+  .worker-meta {
+    grid-template-columns: 1fr;
+  }
+}

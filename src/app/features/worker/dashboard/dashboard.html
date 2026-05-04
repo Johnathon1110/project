@@ -1,0 +1,37 @@
+<app-app-shell>
+  <section class="dashboard-page">
+    <div class="header">
+      <span class="dashboard-badge">Worker Panel</span>
+      <h2>Worker Dashboard</h2>
+      <p>Track your applications, recommendations, and work activity.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">📄</span>
+        <h3>{{ totalApplications }}</h3>
+        <p>Total Applications</p>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-icon">✅</span>
+        <h3>{{ acceptedApplications }}</h3>
+        <p>Accepted Applications</p>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-icon">⭐</span>
+        <h3>{{ recommendedCount }}</h3>
+        <p>Recommended Tasks</p>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3>Activity Summary</h3>
+      <p>
+        Use the sidebar to browse tasks, check recommendations, manage applications,
+        and update your profile.
+      </p>
+    </div>
+  </section>
+</app-app-shell>

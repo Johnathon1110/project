@@ -1,0 +1,132 @@
+<app-app-shell>
+  <section class="admin-page">
+    <div class="page-header">
+      <span class="admin-badge">Admin Panel</span>
+      <h2>Admin Dashboard</h2>
+      <p>View users, remove users, view tasks, and remove tasks.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>{{ totalUsers }}</h3>
+        <p>Total Users</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>{{ totalWorkers }}</h3>
+        <p>Workers</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>{{ totalOwners }}</h3>
+        <p>Task Owners</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>{{ totalTasks }}</h3>
+        <p>Total Tasks</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="section-header">
+        <h3>View Users</h3>
+        <p>Manage registered workers and task owners.</p>
+      </div>
+
+      <div class="table-wrapper" *ngIf="users.length > 0; else noUsers">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Location</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>{{ user.id }}</td>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="role-pill">{{ user.role }}</span>
+              </td>
+              <td>{{ user.location || '-' }}</td>
+              <td>
+                <button
+                  class="remove-btn"
+                  type="button"
+                  [disabled]="user.role === 'admin'"
+                  (click)="removeUser(user.id)"
+                >
+                  {{ user.role === 'admin' ? 'Protected' : 'Remove' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #noUsers>
+        <div class="empty-state">
+          <h4>No users found</h4>
+          <p>There are no registered users yet.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="admin-section">
+      <div class="section-header">
+        <h3>View Tasks</h3>
+        <p>Monitor and remove posted tasks.</p>
+      </div>
+
+      <div class="table-wrapper" *ngIf="tasks.length > 0; else noTasks">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Budget</th>
+              <th>Status</th>
+              <th>Owner ID</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let task of tasks">
+              <td>{{ task.id }}</td>
+              <td>{{ task.title }}</td>
+              <td>{{ task.category }}</td>
+              <td>{{ task.location }}</td>
+              <td>{{ task.budget }} EGP</td>
+              <td>
+                <span class="status-pill">{{ task.status }}</span>
+              </td>
+              <td>{{ task.ownerId }}</td>
+              <td>
+                <button class="remove-btn" type="button" (click)="removeTask(task.id)">
+                  Remove
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #noTasks>
+        <div class="empty-state">
+          <h4>No tasks found</h4>
+          <p>There are no posted tasks yet.</p>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+</app-app-shell>

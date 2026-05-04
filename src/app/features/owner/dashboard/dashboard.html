@@ -1,0 +1,40 @@
+<app-app-shell>
+  <section class="dashboard-page">
+
+    <div class="header">
+      <span class="dashboard-badge">Owner Panel</span>
+      <h2>Owner Dashboard</h2>
+      <p>Track your tasks, applicants, and hiring activity.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">📌</span>
+        <h3>{{ totalTasks }}</h3>
+        <p>Total Tasks</p>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-icon">👥</span>
+        <h3>{{ totalApplicants }}</h3>
+        <p>Total Applicants</p>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-icon">✅</span>
+        <h3>{{ acceptedApplicants }}</h3>
+        <p>Accepted Applicants</p>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3>Activity Summary</h3>
+      <p>
+        Use the sidebar to manage your tasks, review applicants,
+        and find recommended workers.
+      </p>
+    </div>
+
+  </section>
+</app-app-shell>

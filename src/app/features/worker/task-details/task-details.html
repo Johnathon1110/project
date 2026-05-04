@@ -1,0 +1,109 @@
+<app-app-shell>
+  <section class="task-details-page" *ngIf="task; else notFound">
+    <div class="details-layout">
+      <main class="task-details-card">
+        <div class="task-cover"></div>
+
+        <div class="task-header">
+          <div>
+            <p class="task-category">{{ task.category }}</p>
+            <h2>{{ task.title }}</h2>
+          </div>
+
+          <span class="task-status">{{ task.status }}</span>
+        </div>
+
+        <div class="description-card">
+          <h3>Description</h3>
+          <p>{{ task.description }}</p>
+        </div>
+
+        <div class="task-info-grid">
+          <div class="info-box">
+            <span class="label">Type</span>
+            <p>{{ task.type }}</p>
+          </div>
+
+          <div class="info-box">
+            <span class="label">Location</span>
+            <p>{{ task.location }}</p>
+          </div>
+
+          <div class="info-box">
+            <span class="label">Budget</span>
+            <p>{{ task.budget }} EGP</p>
+          </div>
+
+          <div class="info-box">
+            <span class="label">Date</span>
+            <p>{{ task.date }}</p>
+          </div>
+        </div>
+
+        <div class="skills-section">
+          <h3>Required Skills</h3>
+          <div class="skills-list">
+            <span class="skill-badge" *ngFor="let skill of task.requiredSkills">
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+
+        <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <div class="task-actions">
+          <a *ngIf="isWorker()" routerLink="/worker/tasks" class="back-btn">
+            ← Back to Tasks
+          </a>
+
+          <a *ngIf="isOwner()" routerLink="/owner/my-tasks" class="back-btn">
+            ← Back to My Tasks
+          </a>
+
+          <button
+            *ngIf="isWorker()"
+            class="primary-btn"
+            type="button"
+            (click)="applyToTask()"
+            [disabled]="hasApplied || task.status !== 'open'"
+          >
+            {{ hasApplied ? 'Already Applied' : task.status !== 'open' ? 'Applications Closed' : 'Apply Now' }}
+          </button>
+        </div>
+      </main>
+
+      <aside class="side-card">
+        <h3>Task Summary</h3>
+
+        <div class="summary-row">
+          <span>Status</span>
+          <strong>{{ task.status }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Budget</span>
+          <strong>{{ task.budget }} EGP</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Location</span>
+          <strong>{{ task.location }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Category</span>
+          <strong>{{ task.category }}</strong>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <ng-template #notFound>
+    <section class="not-found-state">
+      <h2>Task not found</h2>
+      <p>The task you are looking for does not exist.</p>
+      <a routerLink="/worker/tasks" class="back-btn">← Back to Tasks</a>
+    </section>
+  </ng-template>
+</app-app-shell>

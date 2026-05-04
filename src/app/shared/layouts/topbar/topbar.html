@@ -1,0 +1,16 @@
+<header class="topbar">
+  <div>
+    <h1>Dashboard Workspace</h1>
+    <p>Manage tasks, communication, and smart recommendations.</p>
+  </div>
+
+  <div class="topbar-actions">
+    <span class="role-badge" *ngIf="userRole === 'worker'">
+      Worker Mode
+    </span>
+
+    <span class="role-badge" *ngIf="userRole === 'owner'">
+      Owner Mode
+    </span>
+  </div>
+</header>

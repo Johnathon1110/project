@@ -1,0 +1,48 @@
+<app-app-shell>
+  <section class="applicants-page">
+    <div class="page-header">
+      <h2>Applicants</h2>
+      <p>People who applied for: <strong>{{ taskTitle }}</strong></p>
+    </div>
+
+    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="applicants-list" *ngIf="applicants.length > 0; else noApplicants">
+      <div class="applicant-card" *ngFor="let app of applicants">
+        <h3>Worker ID: {{ app.workerId }}</h3>
+
+        <a class="profile-btn" [routerLink]="['/owner/worker-profile', app.workerId]">
+          View Worker Profile
+        </a>
+
+        <div class="applicant-meta">
+          <span><strong>Status:</strong> {{ app.status }}</span>
+          <span><strong>Applied At:</strong> {{ app.appliedAt | date }}</span>
+        </div>
+
+        <div class="actions" *ngIf="app.status === 'pending'; else statusDone">
+          <button class="accept-btn" (click)="updateStatus(app.id, 'accepted')">Accept</button>
+          <button class="reject-btn" (click)="updateStatus(app.id, 'rejected')">Reject</button>
+        </div>
+
+        <ng-template #statusDone>
+          <div
+            class="status-badge"
+            [class.accepted]="app.status === 'accepted'"
+            [class.rejected]="app.status === 'rejected'"
+          >
+            {{ app.status }}
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <ng-template #noApplicants>
+      <div class="empty-state">
+        <h3>No applicants yet</h3>
+        <p>No one has applied to this task yet.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

@@ -1,0 +1,59 @@
+<app-app-shell>
+  <section class="recommended-workers-page">
+    <div class="page-header">
+      <h2>Recommended Workers</h2>
+      <p>Best matches for: <strong>{{ taskTitle }}</strong></p>
+    </div>
+
+    <div class="workers-list" *ngIf="workers.length > 0; else noWorkers">
+      <div class="worker-card" *ngFor="let worker of workers">
+        <div class="worker-top">
+          <div>
+            <h3>{{ worker.fullName }}</h3>
+            <p>{{ worker.location || 'No location added' }}</p>
+          </div>
+
+          <span class="match-score">{{ worker.matchScore }}% Match</span>
+        </div>
+
+        <div class="worker-meta">
+          <div class="meta-item">
+            <span>Experience</span>
+            <strong>{{ worker.experience || '-' }}</strong>
+          </div>
+
+          <div class="meta-item">
+            <span>Availability</span>
+            <strong>{{ worker.availability || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="skills">
+          <strong>Matched Skills</strong>
+          <div class="skills-list">
+            <span *ngFor="let skill of worker.matchedSkills" class="skill-badge">
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+
+        <div class="worker-actions">
+          <a class="profile-btn" [routerLink]="['/owner/worker-profile', worker.id]">
+            View Profile
+          </a>
+
+          <button class="message-btn" type="button" (click)="messageWorker(worker.id)">
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noWorkers>
+      <div class="empty-state">
+        <h3>No matching workers</h3>
+        <p>No workers match this task yet.</p>
+      </div>
+    </ng-template>
+  </section>
+</app-app-shell>

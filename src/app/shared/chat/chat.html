@@ -1,0 +1,62 @@
+<app-app-shell>
+  <section class="chat-page">
+    <aside class="chat-list">
+      <h2>Chats</h2>
+
+      <div class="conversation-list" *ngIf="conversations.length > 0; else noChats">
+        <button
+          type="button"
+          class="conversation-card"
+          *ngFor="let conversation of conversations"
+          [class.active]="conversation.id === selectedConversation?.id"
+          (click)="selectConversation(conversation)"
+        >
+          <strong>{{ getOtherUserName(conversation) }}</strong>
+          <span>{{ conversation.taskTitle }}</span>
+        </button>
+      </div>
+
+      <ng-template #noChats>
+        <div class="empty-state">
+          <p>No chats yet.</p>
+          <small>Chats will appear after a worker applies to a task.</small>
+        </div>
+      </ng-template>
+    </aside>
+
+    <main class="chat-window" *ngIf="selectedConversation; else selectChat">
+      <div class="chat-header">
+        <h3>{{ getOtherUserName(selectedConversation) }}</h3>
+        <p>{{ selectedConversation.taskTitle }}</p>
+      </div>
+
+      <div class="messages">
+        <div
+          class="message"
+          *ngFor="let message of messages"
+          [class.mine]="isMyMessage(message)"
+        >
+          <p>{{ message.text }}</p>
+          <small>{{ message.createdAt | date:'shortTime' }}</small>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input
+          type="text"
+          [(ngModel)]="newMessage"
+          placeholder="Type your message..."
+          (keyup.enter)="sendMessage()"
+        />
+        <button type="button" (click)="sendMessage()">Send</button>
+      </div>
+    </main>
+
+    <ng-template #selectChat>
+      <main class="chat-window empty-chat">
+        <h3>Select a chat</h3>
+        <p>Choose a conversation to start messaging.</p>
+      </main>
+    </ng-template>
+  </section>
+</app-app-shell>

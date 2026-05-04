@@ -1,0 +1,247 @@
+.worker-profile-page {
+  padding: 28px;
+  background: #f5f6fa;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+}
+
+.profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-hero,
+.info-card,
+.reviews-card,
+.stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.profile-hero {
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.cover {
+  height: 70px;
+}
+
+.hero-content {
+  padding: 0 28px 28px;
+  margin-top: -45px;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.avatar {
+  width: 95px;
+  height: 95px;
+  border-radius: 24px;
+  border: 4px solid white;
+  background: #111827;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.user-title {
+  flex: 1;
+}
+
+.role-badge {
+  background: #f3e8ff;
+  color: #6d28d9;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.user-title h2 {
+  margin: 10px 0 4px;
+  font-size: 30px;
+}
+
+.user-title p {
+  color: #6b7280;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.stat-card {
+  border-radius: 22px;
+  padding: 20px;
+}
+
+.stat-card span {
+  font-size: 26px;
+}
+
+.stat-card h3 {
+  margin: 10px 0 4px;
+  font-size: 28px;
+}
+
+.stat-card p {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.info-card,
+.reviews-card {
+  border-radius: 28px;
+  padding: 26px;
+}
+
+.info-card h3,
+.reviews-card h3 {
+  font-size: 24px;
+  margin-bottom: 18px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.info-item {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.info-item label,
+.skills-section label,
+.add-review label {
+  display: block;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.info-item p {
+  font-weight: 700;
+  margin: 0;
+}
+
+.skills-section {
+  margin-top: 20px;
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skills-tags span {
+  background: #f3e8ff;
+  color: #6d28d9;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.reviews-card > p {
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+.review-item {
+  background: #f9fafb;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.review-head span {
+  color: #f59e0b;
+}
+
+.review-item p {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.empty-reviews {
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.add-review {
+  margin-top: 22px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 18px;
+}
+
+.add-review h4 {
+  margin-bottom: 14px;
+}
+
+.add-review select,
+.add-review textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.add-review button {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.success {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+@media (max-width: 1000px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
