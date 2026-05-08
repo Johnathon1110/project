@@ -5,13 +5,23 @@
       <p>Tasks matched to your skills and profile.</p>
     </div>
 
-    <div *ngIf="!hasProfile" class="empty-state">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div *ngIf="isLoading" class="empty-state">
+      <h3>Loading recommendations...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div *ngIf="!isLoading && !hasProfile" class="empty-state">
       <h3>Complete your profile first</h3>
       <p>Add your skills to get task recommendations.</p>
       <a routerLink="/worker/profile" class="profile-btn">Go to Profile</a>
     </div>
 
-    <div *ngIf="hasProfile && recommendedTasks.length > 0; else noRecommendations" class="tasks-grid">
+    <div
+      *ngIf="!isLoading && hasProfile && recommendedTasks.length > 0; else noRecommendations"
+      class="tasks-grid"
+    >
       <div class="task-card" *ngFor="let task of recommendedTasks">
         <div class="task-top">
           <h3>{{ task.title }}</h3>
@@ -27,7 +37,7 @@
           <span><strong>Budget:</strong> {{ task.budget }} EGP</span>
         </div>
 
-        <div class="matched-skills">
+        <div class="matched-skills" *ngIf="task.matchedSkills && task.matchedSkills.length > 0">
           <strong>Matched Skills:</strong>
           <div class="skills-list">
             <span class="skill-badge" *ngFor="let skill of task.matchedSkills">
@@ -43,7 +53,7 @@
     </div>
 
     <ng-template #noRecommendations>
-      <div class="empty-state" *ngIf="hasProfile">
+      <div class="empty-state" *ngIf="!isLoading && hasProfile">
         <h3>No matching tasks yet</h3>
         <p>We could not find tasks matching your current skills.</p>
       </div>

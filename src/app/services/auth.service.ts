@@ -1,93 +1,66 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
 import { User, UserRole } from '../models/user.model';
+
+interface AuthResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  user?: User;
+}
+
+interface MeResponse {
+  success: boolean;
+  user: User;
+}
+
+interface UsersResponse {
+  success: boolean;
+  users?: User[];
+  workers?: User[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private users: User[] = [
-    {
-      id: 1,
-      fullName: 'Ahmed Ali',
-      email: 'worker@test.com',
-      password: '123456',
-      role: 'worker',
-      phone: '01000000000',
-      location: 'Cairo',
-      skills: ['Delivery', 'Cleaning'],
-      experience: '1 year',
-      availability: 'Evening',
-      rating: 4.5
-    },
-    {
-      id: 2,
-      fullName: 'Sara Mohamed',
-      email: 'owner@test.com',
-      password: '123456',
-      role: 'owner',
-      phone: '01111111111',
-      location: 'Giza',
-      rating: 4.8
-    },
-    {
-      id: 999,
-      fullName: 'Admin',
-      email: 'admin@test.com',
-      password: '123456',
-      role: 'admin',
-      phone: '01099999999',
-      location: 'Cairo',
-      rating: 5
-    }
-  ];
+  private apiUrl = 'http://localhost:5000/api';
 
   private currentUserKey = 'smarttask_current_user';
-  private usersKey = 'smarttask_users';
+  private tokenKey = 'smarttask_token';
 
-  constructor() {
-    const savedUsers = localStorage.getItem(this.usersKey);
+  constructor(private http: HttpClient) {}
 
-    if (savedUsers) {
-      this.users = JSON.parse(savedUsers);
-    } else {
-      localStorage.setItem(this.usersKey, JSON.stringify(this.users));
-    }
-  }
 
-  register(userData: Omit<User, 'id'>): { success: boolean; message: string } {
-    const existingUser = this.users.find(user => user.email === userData.email);
-
-    if (existingUser) {
-      return { success: false, message: 'Email already exists' };
-    }
-
-    const newUser: User = {
-      id: this.users.length + 1,
-      ...userData
-    };
-
-    this.users.push(newUser);
-    localStorage.setItem(this.usersKey, JSON.stringify(this.users));
-
-    return { success: true, message: 'Registration successful' };
-  }
-
-  login(email: string, password: string): { success: boolean; user?: User; message: string } {
-    const user = this.users.find(
-      u => u.email === email && u.password === password
+  register(userData: Omit<User, 'id'>): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData).pipe(
+      tap((response) => {
+        if (response.success && response.token && response.user) {
+          this.saveSession(response.token, response.user);
+        }
+      })
     );
-
-    if (!user) {
-      return { success: false, message: 'Invalid email or password' };
-    }
-
-    localStorage.setItem(this.currentUserKey, JSON.stringify(user));
-
-    return { success: true, user, message: 'Login successful' };
   }
+
+
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, {
+      email,
+      password
+    }).pipe(
+      tap((response) => {
+        if (response.success && response.token && response.user) {
+          this.saveSession(response.token, response.user);
+        }
+      })
+    );
+  }
+
 
   logout(): void {
     localStorage.removeItem(this.currentUserKey);
+    localStorage.removeItem(this.tokenKey);
   }
 
   getCurrentUser(): User | null {
@@ -95,30 +68,74 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+
   isLoggedIn(): boolean {
-    return !!this.getCurrentUser();
+    return !!this.getToken() && !!this.getCurrentUser();
   }
 
   getRole(): UserRole | null {
     return this.getCurrentUser()?.role || null;
   }
 
-  updateUser(updatedUser: any): void {
-  const users = JSON.parse(localStorage.getItem('smarttask_users') || '[]');
-
-  const index = users.findIndex((u: any) => u.id === updatedUser.id);
-
-  if (index !== -1) {
-    users[index] = updatedUser;
-    localStorage.setItem('smarttask_users', JSON.stringify(users));
-    localStorage.setItem('smarttask_current_user', JSON.stringify(updatedUser));
+  getMe(): Observable<MeResponse> {
+    return this.http.get<MeResponse>(`${this.apiUrl}/auth/me`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap((response) => {
+        if (response.success && response.user) {
+          localStorage.setItem(this.currentUserKey, JSON.stringify(response.user));
+        }
+      })
+    );
   }
-}
+
+
+  updateUser(updatedUser: any): Observable<AuthResponse> {
+    return this.http.put<AuthResponse>(`${this.apiUrl}/users/me`, updatedUser, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap((response) => {
+        if (response.success && response.user) {
+          localStorage.setItem(this.currentUserKey, JSON.stringify(response.user));
+        }
+      })
+    );
+  }
+
+
+  getAllUsersFromApi(): Observable<UsersResponse> {
+    return this.http.get<UsersResponse>(`${this.apiUrl}/users`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+
+  getWorkersFromApi(): Observable<UsersResponse> {
+    return this.http.get<UsersResponse>(`${this.apiUrl}/users/workers`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
 
   getAllUsers(): any[] {
-  return JSON.parse(localStorage.getItem('smarttask_users') || '[]');
+    const currentUser = this.getCurrentUser();
+    return currentUser ? [currentUser] : [];
+  }
+
+  private saveSession(token: string, user: User): void {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.currentUserKey, JSON.stringify(user));
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
+  }
 }
-
-}
-
-

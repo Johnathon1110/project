@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { AuthService } from '../../../services/auth.service';
 import { ReviewService } from '../../../services/review.service';
@@ -17,7 +18,11 @@ export class Profile implements OnInit {
   reviewForm: FormGroup;
 
   isEditing = false;
+  isLoadingReviews = false;
+  isSaving = false;
+
   successMessage = '';
+  errorMessage = '';
 
   currentUserRole = 'worker';
   viewedProfileRole = 'worker';
@@ -27,7 +32,8 @@ export class Profile implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private reviewService: ReviewService
+    private reviewService: ReviewService,
+    private cdr: ChangeDetectorRef
   ) {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
@@ -50,37 +56,71 @@ export class Profile implements OnInit {
   ngOnInit(): void {
     const user: any = this.authService.getCurrentUser();
 
-    if (user) {
-      this.currentUserRole = user.role || 'worker';
-      this.viewedProfileRole = user.role || 'worker';
-
-      this.profileForm.patchValue({
-        name: user.fullName || user.name || 'User',
-        email: user.email || '',
-        role: user.role || 'worker',
-        skills: Array.isArray(user.skills) ? user.skills.join(', ') : (user.skills || ''),
-        experience: user.experience || '',
-        availability: user.availability || '',
-        location: user.location || '',
-        completedTasks: user.completedTasks || 0,
-        rating: user.rating || 0
-      });
-
-      this.loadReviews(user.id);
+    if (!user) {
+      this.errorMessage = 'You must be logged in to view your profile.';
+      this.cdr.detectChanges();
+      return;
     }
+
+    this.currentUserRole = user.role || 'worker';
+    this.viewedProfileRole = user.role || 'worker';
+
+    this.profileForm.patchValue({
+      name: user.fullName || user.name || 'User',
+      email: user.email || '',
+      role: user.role || 'worker',
+      skills: Array.isArray(user.skills) ? user.skills.join(', ') : (user.skills || ''),
+      experience: user.experience || '',
+      availability: user.availability || '',
+      location: user.location || '',
+      completedTasks: user.completedTasks || 0,
+      rating: user.rating || 0
+    });
+
+    this.loadReviews(user.id);
   }
 
   loadReviews(userId: number): void {
-    this.reviews = this.reviewService
-      .getUserReviews(userId)
-      .filter((review: any) => review.revieweeId === userId);
+    this.isLoadingReviews = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.reviewService.getUserReviews(userId).subscribe({
+      next: (response) => {
+        console.log('Profile Reviews API response:', response);
+
+        this.reviews = (response.reviews || []).filter(
+          (review: any) => review.revieweeId === userId
+        );
+
+        this.updateRatingFromReviews();
+
+        this.isLoadingReviews = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load profile reviews:', error);
+
+        this.reviews = [];
+        this.isLoadingReviews = false;
+        this.errorMessage = error.error?.message || 'Failed to load reviews.';
+
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  getReviewerName(reviewerId: number): string {
-    const users = this.authService.getAllUsers();
-    const reviewer = users.find((user: any) => user.id === reviewerId);
+  getReviewerName(reviewOrReviewerId: any): string {
+    if (reviewOrReviewerId?.reviewer?.fullName) {
+      return reviewOrReviewerId.reviewer.fullName;
+    }
 
-    return reviewer?.fullName || reviewer?.name || 'Task Owner';
+    if (typeof reviewOrReviewerId === 'number') {
+      const review = this.reviews.find((item: any) => item.reviewerId === reviewOrReviewerId);
+      return review?.reviewer?.fullName || 'Task Owner';
+    }
+
+    return 'Task Owner';
   }
 
   get canAddReview(): boolean {
@@ -90,6 +130,7 @@ export class Profile implements OnInit {
   toggleEdit(): void {
     this.isEditing = !this.isEditing;
     this.successMessage = '';
+    this.errorMessage = '';
   }
 
   saveProfile(): void {
@@ -99,14 +140,23 @@ export class Profile implements OnInit {
     }
 
     const user: any = this.authService.getCurrentUser();
-    if (!user) return;
+
+    if (!user) {
+      this.errorMessage = 'You must be logged in.';
+      return;
+    }
+
+    this.isSaving = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.cdr.detectChanges();
 
     const formValue = this.profileForm.value;
 
-    const skillsArray = formValue.skills
+    const skillsArray = String(formValue.skills || '')
       .split(',')
-      .map((s: string) => s.trim())
-      .filter((s: string) => s.length > 0);
+      .map((skill: string) => skill.trim())
+      .filter((skill: string) => skill.length > 0);
 
     const updatedUser = {
       ...user,
@@ -122,14 +172,29 @@ export class Profile implements OnInit {
       rating: formValue.rating
     };
 
-    this.authService.updateUser(updatedUser);
+    this.authService.updateUser(updatedUser).subscribe({
+      next: (response) => {
+        this.isSaving = false;
 
-    this.profileForm.patchValue({
-      skills: skillsArray.join(', ')
+        if (response.success && response.user) {
+          this.profileForm.patchValue({
+            skills: skillsArray.join(', ')
+          });
+
+          this.isEditing = false;
+          this.successMessage = response.message || 'Profile updated successfully!';
+        } else {
+          this.errorMessage = response.message || 'Failed to update profile.';
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.isSaving = false;
+        this.errorMessage = error.error?.message || 'Failed to update profile.';
+        this.cdr.detectChanges();
+      }
     });
-
-    this.isEditing = false;
-    this.successMessage = 'Profile updated successfully!';
   }
 
   submitReview(): void {
@@ -138,16 +203,7 @@ export class Profile implements OnInit {
       return;
     }
 
-    this.reviews.unshift({
-      reviewerName: 'Task Owner',
-      rating: Number(this.reviewForm.value.rating),
-      comment: this.reviewForm.value.comment
-    });
-
-    this.reviewForm.reset({
-      rating: 5,
-      comment: ''
-    });
+    this.errorMessage = 'Review submission from this page is disabled.';
   }
 
   getSkills(): string[] {
@@ -157,9 +213,26 @@ export class Profile implements OnInit {
 
     if (Array.isArray(skills)) return skills;
 
-    return skills
+    return String(skills)
       .split(',')
-      .map((s: string) => s.trim())
-      .filter((s: string) => s.length > 0);
+      .map((skill: string) => skill.trim())
+      .filter((skill: string) => skill.length > 0);
+  }
+
+  private updateRatingFromReviews(): void {
+    if (this.reviews.length === 0) {
+      return;
+    }
+
+    const total = this.reviews.reduce(
+      (sum, review) => sum + Number(review.rating || 0),
+      0
+    );
+
+    const average = Number((total / this.reviews.length).toFixed(1));
+
+    this.profileForm.patchValue({
+      rating: average
+    });
   }
 }

@@ -1,140 +1,146 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
 import { Task } from '../models/task.model';
+
+interface TaskResponse {
+  success: boolean;
+  message?: string;
+  task?: Task;
+}
+
+interface TasksResponse {
+  success: boolean;
+  tasks: Task[];
+}
+
+interface RecommendedTasksResponse {
+  success: boolean;
+  recommendations: any[];
+}
+
+interface RecommendedWorkersResponse {
+  success: boolean;
+  task: Task;
+  recommendations: any[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskService {
-  private tasksKey = 'smarttask_tasks';
+  private apiUrl = 'http://localhost:5000/api';
+  private tokenKey = 'smarttask_token';
 
-  private tasks: Task[] = [
-    {
-      id: 1,
-      title: 'Delivery Helper Needed',
-      description: 'Need a worker to help with local deliveries for one day.',
-      category: 'Delivery',
-      type: 'physical',
-      location: 'Cairo',
-      budget: 200,
-      date: '2026-04-15',
-      ownerId: 2,
-      requiredSkills: ['Driving', 'Time Management'],
-      status: 'open'
-    },
-    {
-      id: 2,
-      title: 'Home Cleaning Task',
-      description: 'Looking for someone to clean a small apartment.',
-      category: 'Cleaning',
-      type: 'physical',
-      location: 'Giza',
-      budget: 150,
-      date: '2026-04-16',
-      ownerId: 2,
-      requiredSkills: ['Cleaning', 'Attention to Detail'],
-      status: 'open'
-    },
-    {
-      id: 3,
-      title: 'Simple Logo Design',
-      description: 'Need a basic logo for a small online shop.',
-      category: 'Design',
-      type: 'remote',
-      location: 'Remote',
-      budget: 300,
-      date: '2026-04-18',
-      ownerId: 2,
-      requiredSkills: ['Photoshop', 'Creativity'],
-      status: 'open'
-    }
-  ];
+  constructor(private http: HttpClient) {}
 
-  constructor() {
-    const savedTasks = localStorage.getItem(this.tasksKey);
-
-    if (savedTasks) {
-      this.tasks = JSON.parse(savedTasks);
-    } else {
-      localStorage.setItem(this.tasksKey, JSON.stringify(this.tasks));
-    }
+  /**
+   * Get all open tasks.
+   * Used by workers to browse available tasks.
+   */
+  getAllTasks(): Observable<TasksResponse> {
+    return this.http.get<TasksResponse>(`${this.apiUrl}/tasks`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  getAllTasks(): Task[] {
-    return this.tasks;
+  /**
+   * Get one task by id.
+   */
+  getTaskById(id: number): Observable<TaskResponse> {
+    return this.http.get<TaskResponse>(`${this.apiUrl}/tasks/${id}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  getTaskById(id: number): Task | undefined {
-    return this.tasks.find(task => task.id === id);
+  /**
+   * Get tasks created by the currently logged-in owner.
+   * The backend uses the token to know the owner id.
+   */
+  getTasksByOwnerId(ownerId?: number): Observable<TasksResponse> {
+    return this.http.get<TasksResponse>(`${this.apiUrl}/tasks/owner/my-tasks`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  getTasksByOwnerId(ownerId: number): Task[] {
-    return this.tasks.filter(task => task.ownerId === ownerId);
+  /**
+   * Create a new task.
+   * Owner only.
+   */
+  addTask(taskData: Omit<Task, 'id'>): Observable<TaskResponse> {
+    return this.http.post<TaskResponse>(`${this.apiUrl}/tasks`, taskData, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  addTask(taskData: Omit<Task, 'id'>): { success: boolean; message: string } {
-    const newTask: Task = {
-      id: this.tasks.length + 1,
-      ...taskData
-    };
-
-    this.tasks.push(newTask);
-    localStorage.setItem(this.tasksKey, JSON.stringify(this.tasks));
-
-    return { success: true, message: 'Task created successfully' };
+  /**
+   * Update task data.
+   * Owner only.
+   */
+  updateTask(taskId: number, taskData: Partial<Task>): Observable<TaskResponse> {
+    return this.http.put<TaskResponse>(`${this.apiUrl}/tasks/${taskId}`, taskData, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  getRecommendedTasks(userSkills: string[]): any[] {
-  return this.tasks
-    .map(task => {
-      const matchedSkills = task.requiredSkills.filter(skill =>
-        userSkills.some(userSkill => userSkill.toLowerCase() === skill.toLowerCase())
-      );
-
-      const score = task.requiredSkills.length > 0
-        ? Math.round((matchedSkills.length / task.requiredSkills.length) * 100)
-        : 0;
-
-      return {
-        ...task,
-        matchScore: score,
-        matchedSkills
-      };
-    })
-    .filter(task => task.matchScore > 0)
-    .sort((a, b) => b.matchScore - a.matchScore);
-}
-
-getRecommendedWorkers(task: any, workers: any[]): any[] {
-  return workers
-    .map(worker => {
-      const workerSkills = worker.skills || [];
-
-      const matchedSkills = task.requiredSkills.filter((skill: string) =>
-        workerSkills.some((ws: string) => ws.toLowerCase() === skill.toLowerCase())
-      );
-
-      const score = task.requiredSkills.length > 0
-        ? Math.round((matchedSkills.length / task.requiredSkills.length) * 100)
-        : 0;
-
-      return {
-        ...worker,
-        matchScore: score,
-        matchedSkills
-      };
-    })
-    .filter(worker => worker.matchScore > 0)
-    .sort((a, b) => b.matchScore - a.matchScore);
-}
-
-updateTaskStatus(taskId: number, status: 'open' | 'in-progress' | 'completed'): void {
-  const task = this.tasks.find(t => t.id === taskId);
-
-  if (task) {
-    task.status = status;
-    localStorage.setItem(this.tasksKey, JSON.stringify(this.tasks));
+  /**
+   * Update task status.
+   * Owner only.
+   */
+  updateTaskStatus(
+    taskId: number,
+    status: 'open' | 'in-progress' | 'completed'
+  ): Observable<TaskResponse> {
+    return this.http.patch<TaskResponse>(
+      `${this.apiUrl}/tasks/${taskId}/status`,
+      { status },
+      {
+        headers: this.getAuthHeaders()
+      }
+    );
   }
-}
 
+  /**
+   * Get recommended tasks for the logged-in worker.
+   * Backend calculates matchScore based mainly on skills.
+   */
+  getRecommendedTasks(userSkills?: string[]): Observable<RecommendedTasksResponse> {
+    return this.http.get<RecommendedTasksResponse>(`${this.apiUrl}/recommendations/tasks`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 
+  /**
+   * Get recommended workers for a specific task.
+   * Owner only.
+   */
+  getRecommendedWorkers(task: any, workers?: any[]): Observable<RecommendedWorkersResponse> {
+    const taskId = typeof task === 'number' ? task : task.id;
+
+    return this.http.get<RecommendedWorkersResponse>(
+      `${this.apiUrl}/recommendations/workers/${taskId}`,
+      {
+        headers: this.getAuthHeaders()
+      }
+    );
+  }
+
+  /**
+   * Get JWT token from localStorage.
+   */
+  private getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  /**
+   * Build Authorization header for protected APIs.
+   */
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
+  }
 }

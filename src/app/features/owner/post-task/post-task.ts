@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { TaskService } from '../../../services/task.service';
 import { AuthService } from '../../../services/auth.service';
@@ -16,6 +17,7 @@ export class PostTask {
   postTaskForm: FormGroup;
   successMessage = '';
   errorMessage = '';
+  isLoading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -48,33 +50,62 @@ export class PostTask {
       return;
     }
 
-    const skillsArray = this.postTaskForm.value.requiredSkills
+    if (currentUser.role !== 'owner') {
+      this.errorMessage = 'Only task owners can post tasks.';
+      this.successMessage = '';
+      return;
+    }
+
+    this.isLoading = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    const formValue = this.postTaskForm.value;
+
+    const skillsArray = String(formValue.requiredSkills || '')
       .split(',')
       .map((skill: string) => skill.trim())
       .filter((skill: string) => skill.length > 0);
 
-    const result = this.taskService.addTask({
-      title: this.postTaskForm.value.title,
-      description: this.postTaskForm.value.description,
-      category: this.postTaskForm.value.category,
-      type: this.postTaskForm.value.type,
-      location: this.postTaskForm.value.location,
-      budget: Number(this.postTaskForm.value.budget),
-      date: this.postTaskForm.value.date,
+    this.taskService.addTask({
+      title: formValue.title,
+      description: formValue.description,
+      category: formValue.category,
+      type: formValue.type,
+      location: formValue.location,
+      budget: Number(formValue.budget),
+      date: formValue.date,
       ownerId: currentUser.id,
       requiredSkills: skillsArray,
       status: 'open'
-    });
+    }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
 
-    if (result.success) {
-      this.successMessage = result.message;
-      this.errorMessage = '';
-      this.postTaskForm.reset({
-        type: 'physical'
-      });
-    } else {
-      this.errorMessage = result.message;
-      this.successMessage = '';
-    }
+        if (response.success) {
+          this.successMessage = response.message || 'Task created successfully.';
+          this.errorMessage = '';
+
+          this.postTaskForm.reset({
+            title: '',
+            description: '',
+            category: '',
+            type: 'physical',
+            location: '',
+            budget: '',
+            date: '',
+            requiredSkills: ''
+          });
+        } else {
+          this.errorMessage = response.message || 'Failed to create task.';
+          this.successMessage = '';
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Failed to create task.';
+        this.successMessage = '';
+      }
+    });
   }
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { TaskService } from '../../../services/task.service';
 import { AuthService } from '../../../services/auth.service';
@@ -14,21 +15,89 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class RecommendedTasks implements OnInit {
   recommendedTasks: any[] = [];
-  hasProfile = true;
+  hasProfile = false;
+  isLoading = false;
+  errorMessage = '';
+
+  private userSkills: string[] = [];
 
   constructor(
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const currentUser = this.authService.getCurrentUser();
+    this.loadRecommendedTasks();
+  }
 
-    if (!currentUser || !currentUser.skills || currentUser.skills.length === 0) {
-      this.hasProfile = false;
+  loadRecommendedTasks(): void {
+    const currentUser: any = this.authService.getCurrentUser();
+
+    if (!currentUser) {
+      this.errorMessage = 'You must be logged in to view recommended tasks.';
+      this.cdr.detectChanges();
       return;
     }
 
-    this.recommendedTasks = this.taskService.getRecommendedTasks(currentUser.skills);
+    this.userSkills = this.getUserSkills(currentUser);
+    this.hasProfile = this.userSkills.length > 0;
+
+    if (!this.hasProfile) {
+      this.recommendedTasks = [];
+      this.isLoading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.taskService.getRecommendedTasks(this.userSkills).subscribe({
+      next: (response) => {
+        console.log('Recommended Tasks API response:', response);
+
+        this.recommendedTasks = (response.recommendations || []).map((task: any) => ({
+          ...task,
+          matchedSkills: this.getMatchedSkills(task.requiredSkills || [])
+        }));
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load recommended tasks:', error);
+
+        this.recommendedTasks = [];
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Failed to load recommended tasks.';
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private getUserSkills(user: any): string[] {
+    if (!user?.skills) return [];
+
+    if (Array.isArray(user.skills)) {
+      return user.skills;
+    }
+
+    return String(user.skills)
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
+  }
+
+  private getMatchedSkills(requiredSkills: string[]): string[] {
+    const normalizedUserSkills = this.userSkills.map((skill) =>
+      String(skill).toLowerCase()
+    );
+
+    return requiredSkills.filter((skill) =>
+      normalizedUserSkills.includes(String(skill).toLowerCase())
+    );
   }
 }

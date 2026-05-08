@@ -6,7 +6,14 @@
       <p>Track your applications, recommendations, and work activity.</p>
     </div>
 
-    <div class="stats-grid">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading dashboard...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div class="stats-grid" *ngIf="!isLoading">
       <div class="stat-card">
         <span class="stat-icon">📄</span>
         <h3>{{ totalApplications }}</h3>

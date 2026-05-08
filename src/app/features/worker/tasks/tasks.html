@@ -5,7 +5,14 @@
       <p>Browse available temporary jobs and find the right one for you.</p>
     </div>
 
-    <div class="tasks-grid" *ngIf="tasks.length > 0; else noTasks">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading tasks...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div class="tasks-grid" *ngIf="!isLoading && tasks.length > 0; else noTasks">
       <div class="task-card" *ngFor="let task of tasks">
         <div class="task-header">
           <div>
@@ -41,7 +48,7 @@
     </div>
 
     <ng-template #noTasks>
-      <div class="empty-state">
+      <div class="empty-state" *ngIf="!isLoading">
         <h3>No tasks available</h3>
         <p>Check back later for new opportunities.</p>
       </div>

@@ -5,52 +5,62 @@
       <p>View and manage the tasks you have posted.</p>
     </div>
 
-    <div class="tasks-grid" *ngIf="myTasks.length > 0; else noTasks">
-      <div class="task-card" *ngFor="let task of myTasks">
-        <div class="task-header">
-          <div>
-            <h3>{{ task.title }}</h3>
+    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading tasks...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+      <div class="tasks-grid" *ngIf="myTasks.length > 0; else noTasks">
+        <div class="task-card" *ngFor="let task of myTasks">
+          <div class="task-header">
+            <div>
+              <h3>{{ task.title }}</h3>
+            </div>
+
+            <span class="task-status">{{ task.status }}</span>
           </div>
 
-          <span class="task-status">{{ task.status }}</span>
-        </div>
+          <div class="task-summary">
+            <div class="summary-item">
+              <span>Budget</span>
+              <strong>{{ task.budget }} EGP</strong>
+            </div>
 
-        <div class="task-summary">
-          <div class="summary-item">
-            <span>Budget</span>
-            <strong>{{ task.budget }} EGP</strong>
+            <div class="summary-item">
+              <span>Date</span>
+              <strong>{{ task.date }}</strong>
+            </div>
           </div>
 
-          <div class="summary-item">
-            <span>Date</span>
-            <strong>{{ task.date }}</strong>
+          <div class="task-actions">
+            <a class="details-btn" [routerLink]="['/owner/task-details', task.id]">
+              View Details
+            </a>
+
+            <a class="applicants-btn" [routerLink]="['/owner/applicants', task.id]">
+              View Applicants
+            </a>
+
+            <a class="recommended-btn" [routerLink]="['/owner/recommended-workers', task.id]">
+              Recommended Workers
+            </a>
+
+            <button
+              class="complete-btn"
+              type="button"
+              *ngIf="task.status !== 'completed'"
+              (click)="markCompleted(task.id)"
+            >
+              Mark as Completed
+            </button>
           </div>
-        </div>
-
-        <div class="task-actions">
-          <a class="details-btn" [routerLink]="['/owner/task-details', task.id]">
-            View Details
-          </a>
-
-          <a class="applicants-btn" [routerLink]="['/owner/applicants', task.id]">
-            View Applicants
-          </a>
-
-          <a class="recommended-btn" [routerLink]="['/owner/recommended-workers', task.id]">
-            Recommended Workers
-          </a>
-
-          <button
-            class="complete-btn"
-            type="button"
-            *ngIf="task.status !== 'completed'"
-            (click)="markCompleted(task.id)"
-          >
-            Mark as Completed
-          </button>
         </div>
       </div>
-    </div>
+    </ng-container>
 
     <ng-template #noTasks>
       <div class="empty-state">

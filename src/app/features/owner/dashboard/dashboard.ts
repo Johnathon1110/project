@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
+
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { TaskService } from '../../../services/task.service';
 import { ApplicationService } from '../../../services/application.service';
@@ -17,6 +19,7 @@ export class OwnerDashboard implements OnInit {
   totalApplicants = 0;
   acceptedApplicants = 0;
   myTasks: any[] = [];
+  errorMessage = '';
 
   constructor(
     private taskService: TaskService,
@@ -28,20 +31,58 @@ export class OwnerDashboard implements OnInit {
     const user = this.authService.getCurrentUser();
     if (!user) return;
 
-    // Tasks
-    const tasks = this.taskService.getTasksByOwnerId(user.id);
-    this.totalTasks = tasks.length;
-    this.myTasks = tasks.slice(0, 3);
+    this.loadDashboard(user.id);
+  }
 
-    // Applicants
-    let allApps: any[] = [];
+  loadDashboard(ownerId: number): void {
+    this.errorMessage = '';
 
-    tasks.forEach(task => {
-      const apps = this.applicationService.getApplicationsByTaskId(task.id);
-      allApps = [...allApps, ...apps];
+    this.taskService.getTasksByOwnerId(ownerId).subscribe({
+      next: (taskResponse) => {
+        const tasks = taskResponse.tasks || [];
+
+        this.totalTasks = tasks.length;
+        this.myTasks = tasks.slice(0, 3);
+
+        if (tasks.length === 0) {
+          this.totalApplicants = 0;
+          this.acceptedApplicants = 0;
+          return;
+        }
+
+        const applicationRequests = tasks.map((task) =>
+          this.applicationService.getApplicationsByTaskId(task.id)
+        );
+
+        forkJoin(applicationRequests).subscribe({
+          next: (applicationResponses) => {
+            let allApps: any[] = [];
+
+            applicationResponses.forEach((response) => {
+              allApps = [...allApps, ...(response.applications || [])];
+            });
+
+            this.totalApplicants = allApps.length;
+            this.acceptedApplicants = allApps.filter(
+              (app) => app.status === 'accepted'
+            ).length;
+          },
+          error: (error) => {
+            this.totalApplicants = 0;
+            this.acceptedApplicants = 0;
+            this.errorMessage =
+              error.error?.message || 'Failed to load applicants statistics.';
+          }
+        });
+      },
+      error: (error) => {
+        this.totalTasks = 0;
+        this.totalApplicants = 0;
+        this.acceptedApplicants = 0;
+        this.myTasks = [];
+        this.errorMessage =
+          error.error?.message || 'Failed to load owner dashboard.';
+      }
     });
-
-    this.totalApplicants = allApps.length;
-    this.acceptedApplicants = allApps.filter(a => a.status === 'accepted').length;
   }
 }

@@ -1,22 +1,164 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-import { Chat } from './chat';
+import { AppShell } from '../layouts/app-shell/app-shell';
+import { AuthService } from '../../services/auth.service';
+import { ChatConversation, ChatMessage, ChatService } from '../../services/chat.service';
 
-describe('Chat', () => {
-  let component: Chat;
-  let fixture: ComponentFixture<Chat>;
+@Component({
+  selector: 'app-chat',
+  standalone: true,
+  imports: [CommonModule, FormsModule, AppShell],
+  templateUrl: './chat.html',
+  styleUrl: './chat.css'
+})
+export class Chat implements OnInit {
+  currentUser: any = null;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [Chat],
-    }).compileComponents();
+  conversations: ChatConversation[] = [];
+  selectedConversation: ChatConversation | null = null;
+  messages: ChatMessage[] = [];
 
-    fixture = TestBed.createComponent(Chat);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
+  newMessage = '';
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+  isLoadingConversations = false;
+  isLoadingMessages = false;
+  isSending = false;
+  errorMessage = '';
+
+  constructor(
+    private authService: AuthService,
+    private chatService: ChatService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
+
+    if (!this.currentUser) {
+      this.errorMessage = 'You must be logged in to view chats.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.loadConversations();
+  }
+
+  loadConversations(): void {
+    this.isLoadingConversations = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.chatService.getUserConversations(this.currentUser.id).subscribe({
+      next: (response) => {
+        console.log('Chat conversations API response:', response);
+
+        this.conversations = response.conversations || [];
+        this.isLoadingConversations = false;
+
+        if (this.conversations.length > 0 && !this.selectedConversation) {
+          this.selectConversation(this.conversations[0]);
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load chat conversations:', error);
+
+        this.conversations = [];
+        this.isLoadingConversations = false;
+        this.errorMessage = error.error?.message || 'Failed to load chats.';
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  selectConversation(conversation: ChatConversation): void {
+    this.selectedConversation = conversation;
+    this.loadMessages(conversation.id);
+  }
+
+  loadMessages(conversationId: number): void {
+    this.isLoadingMessages = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.chatService.getConversationMessages(conversationId).subscribe({
+      next: (response) => {
+        console.log('Chat messages API response:', response);
+
+        this.messages = response.messages || [];
+        this.isLoadingMessages = false;
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load chat messages:', error);
+
+        this.messages = [];
+        this.isLoadingMessages = false;
+        this.errorMessage = error.error?.message || 'Failed to load messages.';
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  sendMessage(): void {
+    const messageText = this.newMessage.trim();
+
+    if (!messageText || !this.selectedConversation || !this.currentUser) {
+      return;
+    }
+
+    this.isSending = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.chatService.sendMessage(
+      this.selectedConversation.id,
+      this.currentUser.id,
+      messageText
+    ).subscribe({
+      next: (response) => {
+        this.isSending = false;
+
+        if (response.success) {
+          this.newMessage = '';
+          this.loadMessages(this.selectedConversation!.id);
+          this.loadConversations();
+        } else {
+          this.errorMessage = response.message || 'Failed to send message.';
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to send chat message:', error);
+
+        this.isSending = false;
+        this.errorMessage = error.error?.message || 'Failed to send message.';
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  getOtherUserName(conversation: ChatConversation): string {
+    if (!this.currentUser) {
+      return 'User';
+    }
+
+    if (this.currentUser.id === conversation.ownerId) {
+      return conversation.worker?.fullName || `Worker #${conversation.workerId}`;
+    }
+
+    return conversation.owner?.fullName || `Owner #${conversation.ownerId}`;
+  }
+
+  isMyMessage(message: ChatMessage): boolean {
+    return message.senderId === this.currentUser?.id;
+  }
+}

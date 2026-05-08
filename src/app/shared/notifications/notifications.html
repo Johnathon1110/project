@@ -5,7 +5,14 @@
       <p>Track task updates, applications, and matching results.</p>
     </div>
 
-    <div class="notifications-list" *ngIf="notifications.length > 0; else noNotifications">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading notifications...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div class="notifications-list" *ngIf="!isLoading && notifications.length > 0; else noNotifications">
       <div
         class="notification-card"
         *ngFor="let notification of notifications"
@@ -28,7 +35,7 @@
     </div>
 
     <ng-template #noNotifications>
-      <div class="empty-state">
+      <div class="empty-state" *ngIf="!isLoading">
         <h3>No notifications yet</h3>
         <p>Updates will appear here when users interact with your tasks.</p>
       </div>

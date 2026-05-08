@@ -5,7 +5,14 @@
       <p>Track the tasks you have applied for.</p>
     </div>
 
-    <div class="applications-list" *ngIf="applications.length > 0; else noApplications">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading applications...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div class="applications-list" *ngIf="!isLoading && applications.length > 0; else noApplications">
       <div class="application-card" *ngFor="let app of applications">
         <h3>{{ app.taskTitle }}</h3>
 
@@ -19,7 +26,7 @@
     </div>
 
     <ng-template #noApplications>
-      <div class="empty-state">
+      <div class="empty-state" *ngIf="!isLoading">
         <h3>No applications yet</h3>
         <p>You have not applied to any tasks yet.</p>
       </div>

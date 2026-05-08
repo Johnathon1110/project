@@ -1,5 +1,12 @@
 <app-app-shell>
-  <section class="worker-profile-page" *ngIf="worker; else notFound">
+  <section class="worker-profile-page" *ngIf="isLoading">
+    <div class="info-card">
+      <h2>Loading worker profile...</h2>
+      <p>Please wait.</p>
+    </div>
+  </section>
+
+  <section class="worker-profile-page" *ngIf="!isLoading && worker; else notFound">
     <div class="profile-layout">
       <main class="profile-main">
         <div class="profile-hero">
@@ -79,9 +86,12 @@
         <h3>Reviews</h3>
         <p>Feedback from task owners</p>
 
+        <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
         <div class="review-item" *ngFor="let review of reviews">
           <div class="review-head">
-            <strong>{{ getReviewerName(review.reviewerId) }}</strong>
+            <strong>{{ getReviewerName(review) }}</strong>
             <span>{{ '⭐'.repeat(review.rating) }}</span>
           </div>
           <p>{{ review.comment }}</p>
@@ -91,7 +101,7 @@
           No reviews yet.
         </div>
 
-        <div class="add-review">
+        <div class="add-review" *ngIf="canAddReview()">
           <h4>Add Review</h4>
 
           <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
@@ -107,9 +117,9 @@
             <label>Comment</label>
             <textarea formControlName="comment" rows="3" placeholder="Write your review"></textarea>
 
-            <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-
-            <button type="submit">Submit Review</button>
+            <button type="submit" [disabled]="isSubmittingReview">
+              {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+            </button>
           </form>
         </div>
       </aside>
@@ -117,10 +127,10 @@
   </section>
 
   <ng-template #notFound>
-    <section class="worker-profile-page">
+    <section class="worker-profile-page" *ngIf="!isLoading">
       <div class="info-card">
         <h2>Worker not found</h2>
-        <p>This worker profile does not exist.</p>
+        <p>{{ errorMessage || 'This worker profile does not exist.' }}</p>
       </div>
     </section>
   </ng-template>

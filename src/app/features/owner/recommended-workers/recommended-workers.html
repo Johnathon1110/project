@@ -5,7 +5,14 @@
       <p>Best matches for: <strong>{{ taskTitle }}</strong></p>
     </div>
 
-    <div class="workers-list" *ngIf="workers.length > 0; else noWorkers">
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading recommended workers...</h3>
+      <p>Please wait.</p>
+    </div>
+
+    <div class="workers-list" *ngIf="!isLoading && workers.length > 0; else noWorkers">
       <div class="worker-card" *ngFor="let worker of workers">
         <div class="worker-top">
           <div>
@@ -26,10 +33,16 @@
             <span>Availability</span>
             <strong>{{ worker.availability || '-' }}</strong>
           </div>
+
+          <div class="meta-item">
+            <span>Rating</span>
+            <strong>{{ worker.rating || 0 }}</strong>
+          </div>
         </div>
 
-        <div class="skills">
+        <div class="skills" *ngIf="worker.matchedSkills && worker.matchedSkills.length > 0">
           <strong>Matched Skills</strong>
+
           <div class="skills-list">
             <span *ngFor="let skill of worker.matchedSkills" class="skill-badge">
               {{ skill }}
@@ -42,15 +55,20 @@
             View Profile
           </a>
 
-          <button class="message-btn" type="button" (click)="messageWorker(worker.id)">
-            Message
+          <button
+            class="message-btn"
+            type="button"
+            (click)="messageWorker(worker.id)"
+            [disabled]="isStartingChat"
+          >
+            {{ isStartingChat ? 'Opening Chat...' : 'Message' }}
           </button>
         </div>
       </div>
     </div>
 
     <ng-template #noWorkers>
-      <div class="empty-state">
+      <div class="empty-state" *ngIf="!isLoading">
         <h3>No matching workers</h3>
         <p>No workers match this task yet.</p>
       </div>

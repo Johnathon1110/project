@@ -65,7 +65,9 @@
         <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
         <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-        <button type="submit" class="submit-btn">Post Task</button>
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Posting...' : 'Post Task' }}
+        </button>
       </form>
     </div>
   </section>

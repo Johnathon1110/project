@@ -1,36 +1,57 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
 import { Review } from '../models/review.model';
+
+interface ReviewResponse {
+  success: boolean;
+  message?: string;
+  review?: Review;
+}
+
+interface ReviewsResponse {
+  success: boolean;
+  reviews: Review[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReviewService {
-  private reviewsKey = 'smarttask_reviews';
+  private apiUrl = 'http://localhost:5000/api';
+  private tokenKey = 'smarttask_token';
 
-  private getReviews(): Review[] {
-    return JSON.parse(localStorage.getItem(this.reviewsKey) || '[]');
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Add review from owner to worker.
+   * Backend automatically handles taskId = 0 by finding accepted task.
+   */
+  addReview(reviewData: Omit<Review, 'id' | 'createdAt'>): Observable<ReviewResponse> {
+    return this.http.post<ReviewResponse>(`${this.apiUrl}/reviews`, reviewData, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  private saveReviews(reviews: Review[]): void {
-    localStorage.setItem(this.reviewsKey, JSON.stringify(reviews));
+  /**
+   * Get reviews received by a user.
+   */
+  getUserReviews(userId: number): Observable<ReviewsResponse> {
+    return this.http.get<ReviewsResponse>(`${this.apiUrl}/reviews/user/${userId}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  addReview(reviewData: Omit<Review, 'id' | 'createdAt'>): void {
-    const reviews = this.getReviews();
-
-    const newReview: Review = {
-      id: Date.now(),
-      ...reviewData,
-      createdAt: new Date().toISOString()
-    };
-
-    reviews.unshift(newReview);
-    this.saveReviews(reviews);
+  private getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
   }
 
-  getUserReviews(userId: number): Review[] {
-    return this.getReviews().filter(
-      review => review.reviewerId === userId || review.revieweeId === userId
-    );
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
   }
 }

@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { ApplicationService } from '../../../services/application.service';
 import { AuthService } from '../../../services/auth.service';
-import { TaskService } from '../../../services/task.service';
 
 @Component({
   selector: 'app-applications',
@@ -14,29 +14,56 @@ import { TaskService } from '../../../services/task.service';
 })
 export class Applications implements OnInit {
   applications: any[] = [];
+  isLoading = false;
+  errorMessage = '';
 
   constructor(
     private applicationService: ApplicationService,
     private authService: AuthService,
-    private taskService: TaskService
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const currentUser = this.authService.getCurrentUser();
+    this.loadApplications();
+  }
 
-    if (!currentUser) return;
+  loadApplications(): void {
+    const user: any = this.authService.getCurrentUser();
 
-    const userApplications = this.applicationService.getApplicationsByWorkerId(currentUser.id);
+    if (!user) {
+      this.errorMessage = 'You must be logged in.';
+      this.cdr.detectChanges();
+      return;
+    }
 
-    this.applications = userApplications.map(app => {
-      const task = this.taskService.getTaskById(app.taskId);
-      return {
-        ...app,
-        taskTitle: task?.title || 'Unknown Task',
-        taskLocation: task?.location || '-',
-        taskBudget: task?.budget || 0,
-        taskType: task?.type || '-'
-      };
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.applicationService.getApplicationsByWorkerId(user.id).subscribe({
+      next: (response) => {
+        console.log('Worker Applications API response:', response);
+
+        this.applications = (response.applications || []).map((app: any) => ({
+          ...app,
+          taskTitle: app.task?.title || 'Unknown Task',
+          taskLocation: app.task?.location || '-',
+          taskBudget: app.task?.budget || 0,
+          taskType: app.task?.type || '-'
+        }));
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load worker applications:', error);
+
+        this.applications = [];
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Failed to load applications.';
+
+        this.cdr.detectChanges();
+      }
     });
   }
 }

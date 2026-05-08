@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 
 export interface ChatConversation {
   id: number;
@@ -8,6 +10,11 @@ export interface ChatConversation {
   ownerId: number;
   participants: number[];
   createdAt: string;
+  task?: any;
+  owner?: any;
+  worker?: any;
+  lastMessage?: string | null;
+  lastMessageAt?: string | null;
 }
 
 export interface ChatMessage {
@@ -16,83 +23,166 @@ export interface ChatMessage {
   senderId: number;
   text: string;
   createdAt: string;
+  sender?: any;
+}
+
+interface ConversationResponse {
+  success: boolean;
+  message?: string;
+  conversation: any;
+}
+
+interface ConversationsResponse {
+  success: boolean;
+  conversations: any[];
+}
+
+interface MessagesResponse {
+  success: boolean;
+  messages: any[];
+}
+
+interface MessageResponse {
+  success: boolean;
+  message?: string;
+  chatMessage: any;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private conversationsKey = 'smarttask_chat_conversations';
-  private messagesKey = 'smarttask_chat_messages';
+  private apiUrl = 'http://localhost:5000/api';
+  private tokenKey = 'smarttask_token';
 
-  private getConversations(): ChatConversation[] {
-    return JSON.parse(localStorage.getItem(this.conversationsKey) || '[]');
-  }
+  constructor(private http: HttpClient) {}
 
-  private saveConversations(conversations: ChatConversation[]): void {
-    localStorage.setItem(this.conversationsKey, JSON.stringify(conversations));
-  }
-
-  private getMessages(): ChatMessage[] {
-    return JSON.parse(localStorage.getItem(this.messagesKey) || '[]');
-  }
-
-  private saveMessages(messages: ChatMessage[]): void {
-    localStorage.setItem(this.messagesKey, JSON.stringify(messages));
-  }
-
+  /**
+   * Create or return existing conversation.
+   * Backend requires taskId and workerId.
+   */
   createConversation(
     taskId: number,
     taskTitle: string,
     workerId: number,
     ownerId: number
-  ): ChatConversation {
-    const conversations = this.getConversations();
-
-    const existingConversation = conversations.find(
-      c => c.taskId === taskId && c.workerId === workerId && c.ownerId === ownerId
+  ): Observable<ConversationResponse> {
+    return this.http.post<ConversationResponse>(
+      `${this.apiUrl}/chat/conversations`,
+      {
+        taskId,
+        workerId
+      },
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).pipe(
+      map((response) => ({
+        ...response,
+        conversation: this.formatConversation(response.conversation)
+      }))
     );
+  }
 
-    if (existingConversation) {
-      return existingConversation;
-    }
+  /**
+   * Get all conversations for current logged-in user.
+   */
+  getUserConversations(userId?: number): Observable<ConversationsResponse> {
+    return this.http.get<ConversationsResponse>(
+      `${this.apiUrl}/chat/conversations`,
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).pipe(
+      map((response) => ({
+        ...response,
+        conversations: (response.conversations || []).map((conversation) =>
+          this.formatConversation(conversation)
+        )
+      }))
+    );
+  }
 
-    const newConversation: ChatConversation = {
-      id: Date.now(),
-      taskId,
-      taskTitle,
-      workerId,
-      ownerId,
-      participants: [workerId, ownerId],
-      createdAt: new Date().toISOString()
+  /**
+   * Get messages for one conversation.
+   */
+  getConversationMessages(conversationId: number): Observable<MessagesResponse> {
+    return this.http.get<MessagesResponse>(
+      `${this.apiUrl}/chat/conversations/${conversationId}/messages`,
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).pipe(
+      map((response) => ({
+        ...response,
+        messages: (response.messages || []).map((message) =>
+          this.formatMessage(message)
+        )
+      }))
+    );
+  }
+
+  /**
+   * Send message in conversation.
+   */
+  sendMessage(
+    conversationId: number,
+    senderId: number,
+    text: string
+  ): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.apiUrl}/chat/conversations/${conversationId}/messages`,
+      {
+        message: text
+      },
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).pipe(
+      map((response) => ({
+        ...response,
+        chatMessage: this.formatMessage(response.chatMessage)
+      }))
+    );
+  }
+
+  private formatConversation(conversation: any): ChatConversation {
+    return {
+      id: conversation.id,
+      taskId: conversation.taskId,
+      taskTitle: conversation.task?.title || conversation.taskTitle || `Task #${conversation.taskId}`,
+      workerId: conversation.workerId,
+      ownerId: conversation.ownerId,
+      participants: [conversation.workerId, conversation.ownerId],
+      createdAt: conversation.createdAt,
+      task: conversation.task,
+      owner: conversation.owner,
+      worker: conversation.worker,
+      lastMessage: conversation.lastMessage || null,
+      lastMessageAt: conversation.lastMessageAt || null
     };
-
-    conversations.unshift(newConversation);
-    this.saveConversations(conversations);
-
-    return newConversation;
   }
 
-  getUserConversations(userId: number): ChatConversation[] {
-    return this.getConversations().filter(c => c.participants.includes(userId));
-  }
-
-  getConversationMessages(conversationId: number): ChatMessage[] {
-    return this.getMessages().filter(m => m.conversationId === conversationId);
-  }
-
-  sendMessage(conversationId: number, senderId: number, text: string): void {
-    const messages = this.getMessages();
-
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      conversationId,
-      senderId,
-      text,
-      createdAt: new Date().toISOString()
+  private formatMessage(message: any): ChatMessage {
+    return {
+      id: message.id,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      text: message.text || message.message || '',
+      createdAt: message.createdAt,
+      sender: message.sender
     };
+  }
 
-    messages.push(newMessage);
-    this.saveMessages(messages);
+  private getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
   }
 }

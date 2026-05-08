@@ -3,7 +3,16 @@
     <aside class="chat-list">
       <h2>Chats</h2>
 
-      <div class="conversation-list" *ngIf="conversations.length > 0; else noChats">
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <div class="empty-state" *ngIf="isLoadingConversations">
+        <p>Loading chats...</p>
+      </div>
+
+      <div
+        class="conversation-list"
+        *ngIf="!isLoadingConversations && conversations.length > 0; else noChats"
+      >
         <button
           type="button"
           class="conversation-card"
@@ -13,13 +22,14 @@
         >
           <strong>{{ getOtherUserName(conversation) }}</strong>
           <span>{{ conversation.taskTitle }}</span>
+          <small *ngIf="conversation.lastMessage">{{ conversation.lastMessage }}</small>
         </button>
       </div>
 
       <ng-template #noChats>
-        <div class="empty-state">
+        <div class="empty-state" *ngIf="!isLoadingConversations">
           <p>No chats yet.</p>
-          <small>Chats will appear after a worker applies to a task.</small>
+          <small>Chats will appear after a worker is accepted for a task.</small>
         </div>
       </ng-template>
     </aside>
@@ -31,6 +41,10 @@
       </div>
 
       <div class="messages">
+        <div class="empty-state" *ngIf="isLoadingMessages">
+          <p>Loading messages...</p>
+        </div>
+
         <div
           class="message"
           *ngFor="let message of messages"
@@ -38,6 +52,10 @@
         >
           <p>{{ message.text }}</p>
           <small>{{ message.createdAt | date:'shortTime' }}</small>
+        </div>
+
+        <div class="empty-state" *ngIf="!isLoadingMessages && messages.length === 0">
+          <p>No messages yet.</p>
         </div>
       </div>
 
@@ -47,8 +65,12 @@
           [(ngModel)]="newMessage"
           placeholder="Type your message..."
           (keyup.enter)="sendMessage()"
+          [disabled]="isSending"
         />
-        <button type="button" (click)="sendMessage()">Send</button>
+
+        <button type="button" (click)="sendMessage()" [disabled]="isSending">
+          {{ isSending ? 'Sending...' : 'Send' }}
+        </button>
       </div>
     </main>
 
