@@ -57,11 +57,28 @@
   outline: none;
   transition: 0.2s;
   background-color: #fff;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.error {
+  display: block;
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.login-error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
 }
 
 .auth-main-btn {
@@ -77,8 +94,13 @@
   transition: 0.2s;
 }
 
-.auth-main-btn:hover {
+.auth-main-btn:hover:not(:disabled) {
   background-color: #1d4ed8;
+}
+
+.auth-main-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .auth-simple-footer {

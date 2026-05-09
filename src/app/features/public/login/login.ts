@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
 
@@ -29,6 +30,10 @@ export class Login {
   }
 
   submitLogin(): void {
+    if (this.isLoading) {
+      return;
+    }
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -37,33 +42,37 @@ export class Login {
     this.errorMessage = '';
     this.isLoading = true;
 
-    const { email, password } = this.loginForm.value;
+    const email = String(this.loginForm.value.email || '').trim().toLowerCase();
+    const password = String(this.loginForm.value.password || '');
 
-    this.authService.login(email, password).subscribe({
-      next: (response) => {
-        this.isLoading = false;
+    this.authService.login(email, password)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success || !response.user) {
+            this.errorMessage = response.message || 'Invalid email or password';
+            return;
+          }
 
-        if (!response.success || !response.user) {
-          this.errorMessage = response.message || 'Login failed';
-          return;
+          const role = response.user.role;
+
+          if (role === 'worker') {
+            this.router.navigate(['/worker/dashboard']);
+          } else if (role === 'owner') {
+            this.router.navigate(['/owner/dashboard']);
+          } else if (role === 'admin') {
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Invalid email or password';
         }
-
-        const role = response.user.role;
-
-        if (role === 'worker') {
-          this.router.navigate(['/worker/dashboard']);
-        } else if (role === 'owner') {
-          this.router.navigate(['/owner/dashboard']);
-        } else if (role === 'admin') {
-          this.router.navigate(['/admin/dashboard']);
-        } else {
-          this.router.navigate(['/']);
-        }
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Invalid email or password';
-      }
-    });
+      });
   }
 }

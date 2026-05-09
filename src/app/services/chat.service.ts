@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
+import { environment } from '../../environments/environment';
+
 export interface ChatConversation {
   id: number;
   taskId: number;
@@ -52,15 +54,11 @@ interface MessageResponse {
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'smarttask_token';
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Create or return existing conversation.
-   * Backend requires taskId and workerId.
-   */
   createConversation(
     taskId: number,
     taskTitle: string,
@@ -84,9 +82,6 @@ export class ChatService {
     );
   }
 
-  /**
-   * Get all conversations for current logged-in user.
-   */
   getUserConversations(userId?: number): Observable<ConversationsResponse> {
     return this.http.get<ConversationsResponse>(
       `${this.apiUrl}/chat/conversations`,
@@ -103,9 +98,6 @@ export class ChatService {
     );
   }
 
-  /**
-   * Get messages for one conversation.
-   */
   getConversationMessages(conversationId: number): Observable<MessagesResponse> {
     return this.http.get<MessagesResponse>(
       `${this.apiUrl}/chat/conversations/${conversationId}/messages`,
@@ -122,9 +114,6 @@ export class ChatService {
     );
   }
 
-  /**
-   * Send message in conversation.
-   */
   sendMessage(
     conversationId: number,
     senderId: number,

@@ -12,6 +12,7 @@
           type="email"
           placeholder="Enter your email"
           formControlName="email"
+          autocomplete="email"
         />
         <small class="error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
           Please enter a valid email.
@@ -24,13 +25,14 @@
           type="password"
           placeholder="Enter your password"
           formControlName="password"
+          autocomplete="current-password"
         />
         <small class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
           Password is required.
         </small>
       </div>
 
-      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="error login-error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
       <button type="submit" class="auth-main-btn" [disabled]="isLoading">
         {{ isLoading ? 'Logging in...' : 'Log In' }}

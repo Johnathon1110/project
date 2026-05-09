@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
+
 interface AdminStatsResponse {
   success: boolean;
   stats: any;
@@ -26,7 +28,7 @@ interface AdminActionResponse {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'smarttask_token';
 
   constructor(private http: HttpClient) {}

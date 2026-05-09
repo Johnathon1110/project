@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { User, UserRole } from '../models/user.model';
+import { environment } from '../../environments/environment';
 
 interface AuthResponse {
   success: boolean;
@@ -25,13 +26,12 @@ interface UsersResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
 
   private currentUserKey = 'smarttask_current_user';
   private tokenKey = 'smarttask_token';
 
   constructor(private http: HttpClient) {}
-
 
   register(userData: Omit<User, 'id'>): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData).pipe(
@@ -42,7 +42,6 @@ export class AuthService {
       })
     );
   }
-
 
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, {
@@ -57,7 +56,6 @@ export class AuthService {
     );
   }
 
-
   logout(): void {
     localStorage.removeItem(this.currentUserKey);
     localStorage.removeItem(this.tokenKey);
@@ -71,7 +69,6 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
-
 
   isLoggedIn(): boolean {
     return !!this.getToken() && !!this.getCurrentUser();
@@ -93,7 +90,6 @@ export class AuthService {
     );
   }
 
-
   updateUser(updatedUser: any): Observable<AuthResponse> {
     return this.http.put<AuthResponse>(`${this.apiUrl}/users/me`, updatedUser, {
       headers: this.getAuthHeaders()
@@ -106,20 +102,17 @@ export class AuthService {
     );
   }
 
-
   getAllUsersFromApi(): Observable<UsersResponse> {
     return this.http.get<UsersResponse>(`${this.apiUrl}/users`, {
       headers: this.getAuthHeaders()
     });
   }
 
-
   getWorkersFromApi(): Observable<UsersResponse> {
     return this.http.get<UsersResponse>(`${this.apiUrl}/users/workers`, {
       headers: this.getAuthHeaders()
     });
   }
-
 
   getAllUsers(): any[] {
     const currentUser = this.getCurrentUser();

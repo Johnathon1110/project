@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
 import { Application } from '../models/application.model';
+import { environment } from '../../environments/environment';
 
 interface ApplicationResponse {
   success: boolean;
@@ -19,46 +20,35 @@ interface ApplicationsResponse {
   providedIn: 'root'
 })
 export class ApplicationService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'smarttask_token';
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Returns applications for the logged-in worker.
-   * Backend knows the worker id from the token.
-   */
-  getApplicationsByWorkerId(workerId?: number): Observable<ApplicationsResponse> {
+  getMyApplications(): Observable<ApplicationsResponse> {
     return this.http.get<ApplicationsResponse>(`${this.apiUrl}/applications/my`, {
       headers: this.getAuthHeaders()
     });
   }
 
-  /**
-   * Returns applications submitted to a specific task.
-   * Owner only.
-   */
+  getApplicationsByWorkerId(workerId?: number): Observable<ApplicationsResponse> {
+    return this.getMyApplications();
+  }
+
   getApplicationsByTaskId(taskId: number): Observable<ApplicationsResponse> {
     return this.http.get<ApplicationsResponse>(`${this.apiUrl}/applications/task/${taskId}`, {
       headers: this.getAuthHeaders()
     });
   }
 
-  /**
-   * Checks if the logged-in worker already applied to a task.
-   */
   hasWorkerApplied(taskId: number, workerId?: number): Observable<boolean> {
-    return this.getApplicationsByWorkerId(workerId).pipe(
+    return this.getMyApplications().pipe(
       map((response) => {
         return response.applications.some((app) => app.taskId === taskId);
       })
     );
   }
 
-  /**
-   * Worker applies to a task.
-   * Backend uses the token to know the worker id.
-   */
   applyToTask(
     taskId: number,
     workerId?: number,
@@ -76,10 +66,6 @@ export class ApplicationService {
     );
   }
 
-  /**
-   * Owner accepts or rejects an application.
-   * Backend updates application status, task status, and notifications.
-   */
   updateApplicationStatus(
     applicationId: number,
     status: 'accepted' | 'rejected'
@@ -95,13 +81,8 @@ export class ApplicationService {
     );
   }
 
-  /**
-   * Optional helper if any old component calls getAllApplications().
-   * Backend does not currently expose "all applications" globally,
-   * so this returns current user's applications.
-   */
   getAllApplications(): Observable<ApplicationsResponse> {
-    return this.getApplicationsByWorkerId();
+    return this.getMyApplications();
   }
 
   private getToken(): string | null {
