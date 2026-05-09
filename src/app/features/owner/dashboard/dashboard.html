@@ -9,8 +9,13 @@
 
     <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
+    <div class="empty-state" *ngIf="isLoading">
+      <h3>Loading dashboard...</h3>
+      <p>Please wait.</p>
+    </div>
+
     <!-- Stats -->
-    <div class="stats-grid">
+    <div class="stats-grid" *ngIf="!isLoading">
       <div class="stat-card">
         <span class="stat-icon">📌</span>
         <h3>{{ totalTasks }}</h3>

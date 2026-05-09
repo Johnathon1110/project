@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 
@@ -19,26 +19,44 @@ export class OwnerDashboard implements OnInit {
   totalApplicants = 0;
   acceptedApplicants = 0;
   myTasks: any[] = [];
+
+  isLoading = false;
   errorMessage = '';
 
   constructor(
     private taskService: TaskService,
     private applicationService: ApplicationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const user = this.authService.getCurrentUser();
-    if (!user) return;
-
-    this.loadDashboard(user.id);
+    this.loadDashboard();
   }
 
-  loadDashboard(ownerId: number): void {
+  loadDashboard(): void {
+    const user = this.authService.getCurrentUser();
+
+    if (!user) {
+      this.errorMessage = 'You must be logged in.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isLoading = true;
     this.errorMessage = '';
 
-    this.taskService.getTasksByOwnerId(ownerId).subscribe({
+    this.totalTasks = 0;
+    this.totalApplicants = 0;
+    this.acceptedApplicants = 0;
+    this.myTasks = [];
+
+    this.cdr.detectChanges();
+
+    this.taskService.getTasksByOwnerId(user.id).subscribe({
       next: (taskResponse) => {
+        console.log('Owner Dashboard Tasks API response:', taskResponse);
+
         const tasks = taskResponse.tasks || [];
 
         this.totalTasks = tasks.length;
@@ -47,10 +65,12 @@ export class OwnerDashboard implements OnInit {
         if (tasks.length === 0) {
           this.totalApplicants = 0;
           this.acceptedApplicants = 0;
+          this.isLoading = false;
+          this.cdr.detectChanges();
           return;
         }
 
-        const applicationRequests = tasks.map((task) =>
+        const applicationRequests = tasks.map((task: any) =>
           this.applicationService.getApplicationsByTaskId(task.id)
         );
 
@@ -58,30 +78,43 @@ export class OwnerDashboard implements OnInit {
           next: (applicationResponses) => {
             let allApps: any[] = [];
 
-            applicationResponses.forEach((response) => {
+            applicationResponses.forEach((response: any) => {
               allApps = [...allApps, ...(response.applications || [])];
             });
 
             this.totalApplicants = allApps.length;
             this.acceptedApplicants = allApps.filter(
-              (app) => app.status === 'accepted'
+              (app: any) => app.status === 'accepted'
             ).length;
+
+            this.isLoading = false;
+            this.cdr.detectChanges();
           },
           error: (error) => {
+            console.error('Failed to load owner applicants stats:', error);
+
             this.totalApplicants = 0;
             this.acceptedApplicants = 0;
+            this.isLoading = false;
             this.errorMessage =
               error.error?.message || 'Failed to load applicants statistics.';
+
+            this.cdr.detectChanges();
           }
         });
       },
       error: (error) => {
+        console.error('Failed to load owner dashboard:', error);
+
         this.totalTasks = 0;
         this.totalApplicants = 0;
         this.acceptedApplicants = 0;
         this.myTasks = [];
+        this.isLoading = false;
         this.errorMessage =
           error.error?.message || 'Failed to load owner dashboard.';
+
+        this.cdr.detectChanges();
       }
     });
   }
