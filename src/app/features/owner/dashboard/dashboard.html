@@ -1,47 +1,68 @@
 <app-app-shell>
   <section class="dashboard-page">
+    <div class="dashboard-hero">
+      <div>
+        <span class="dashboard-badge">Owner Panel</span>
+        <h2>Owner Dashboard</h2>
+        <p>Track your posted tasks, applicants, and hiring progress in one place.</p>
+      </div>
 
-    <div class="header">
-      <span class="dashboard-badge">Owner Panel</span>
-      <h2>Owner Dashboard</h2>
-      <p>Track your tasks, applicants, and hiring activity.</p>
+      <div class="hero-card">
+        <span>SmartTask Connect</span>
+        <strong>Hiring Overview</strong>
+      </div>
     </div>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-
-    <div class="empty-state" *ngIf="isLoading">
-      <h3>Loading dashboard...</h3>
-      <p>Please wait.</p>
+    <div class="error-card" *ngIf="errorMessage">
+      {{ errorMessage }}
     </div>
 
-    <!-- Stats -->
+    <div class="loading-card" *ngIf="isLoading">
+      <div class="loader"></div>
+      <div>
+        <h3>Loading dashboard...</h3>
+        <p>Please wait while we prepare your latest activity.</p>
+      </div>
+    </div>
+
     <div class="stats-grid" *ngIf="!isLoading">
-      <div class="stat-card">
-        <span class="stat-icon">📌</span>
+      <div class="stat-card stat-blue">
+        <div class="stat-top">
+          <span class="stat-icon">📌</span>
+          <span class="stat-label">Tasks</span>
+        </div>
         <h3>{{ totalTasks }}</h3>
-        <p>Total Tasks</p>
+        <p>Total tasks created by you</p>
       </div>
 
-      <div class="stat-card">
-        <span class="stat-icon">👥</span>
+      <div class="stat-card stat-purple">
+        <div class="stat-top">
+          <span class="stat-icon">👥</span>
+          <span class="stat-label">Applicants</span>
+        </div>
         <h3>{{ totalApplicants }}</h3>
-        <p>Total Applicants</p>
+        <p>Workers who applied to your tasks</p>
       </div>
 
-      <div class="stat-card">
-        <span class="stat-icon">✅</span>
+      <div class="stat-card stat-green">
+        <div class="stat-top">
+          <span class="stat-icon">✅</span>
+          <span class="stat-label">Accepted</span>
+        </div>
         <h3>{{ acceptedApplicants }}</h3>
-        <p>Accepted Applicants</p>
+        <p>Applicants accepted for tasks</p>
       </div>
     </div>
 
-    <div class="summary-card">
-      <h3>Activity Summary</h3>
-      <p>
-        Use the sidebar to manage your tasks, review applicants,
-        and find recommended workers.
-      </p>
+    <div class="action-card full-width" *ngIf="!isLoading">
+      <span class="action-icon">🚀</span>
+      <div>
+        <h3>Next Step</h3>
+        <p>
+          Use the sidebar to create tasks, review applicants, view recommended workers,
+          and communicate with accepted workers through chat.
+        </p>
+      </div>
     </div>
-
   </section>
 </app-app-shell>
