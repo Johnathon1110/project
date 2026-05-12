@@ -1,11 +1,12 @@
-<section class="auth-simple-page">
-  <div class="auth-simple-card">
-    <div class="auth-simple-header">
-      <h2>Log in to SmartTask</h2>
-      <p>Welcome back</p>
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="auth-badge">SmartTask Connect</span>
+      <h2>Welcome Back</h2>
+      <p>Log in to continue managing tasks, applications, and chats.</p>
     </div>
 
-    <form class="auth-simple-form" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+    <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
       <div class="form-group">
         <label>Email</label>
         <input
@@ -32,16 +33,18 @@
         </small>
       </div>
 
-      <p class="error login-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <div class="login-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
 
-      <button type="submit" class="auth-main-btn" [disabled]="isLoading">
+      <button type="submit" class="auth-btn" [disabled]="isLoading">
         {{ isLoading ? 'Logging in...' : 'Log In' }}
       </button>
     </form>
 
-    <div class="auth-simple-footer">
+    <div class="auth-footer">
       <span>Don’t have an account?</span>
-      <a routerLink="/register">Register</a>
+      <a routerLink="/register">Create account</a>
     </div>
   </div>
 </section>

@@ -1,65 +1,134 @@
 .admin-page {
-  padding: 24px;
+  min-height: 100%;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+    radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 28%),
+    #f8fafc;
 }
 
-.page-header {
-  margin-bottom: 22px;
+.admin-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 28px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #0f172a, #312e81);
+  color: #fff;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
 }
 
 .admin-badge {
-  display: inline-block;
-  background: #eef2ff;
-  color: #4338ca;
-  padding: 7px 12px;
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 14px;
+  padding: 8px 14px;
   border-radius: 999px;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-hero h2 {
+  margin: 0 0 10px;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.admin-hero p {
+  margin: 0;
+  max-width: 620px;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.hero-card {
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hero-card span {
+  color: #bfdbfe;
   font-size: 13px;
   font-weight: 700;
-  margin-bottom: 10px;
 }
 
-.page-header h2 {
-  margin: 0 0 8px;
-  font-size: 30px;
-  color: #0f172a;
+.hero-card strong {
+  color: #fff;
+  font-size: 22px;
 }
 
-.page-header p {
-  margin: 0;
-  color: #64748b;
+.message {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.success {
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.error-message {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.stat-card,
+.admin-section,
+.empty-state {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .stat-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  padding: 20px;
-  text-align: center;
+  padding: 22px;
+}
+
+.stat-icon {
+  font-size: 28px;
 }
 
 .stat-card h3 {
-  margin: 0;
-  font-size: 30px;
-  color: #111827;
+  margin: 12px 0 6px;
+  color: #0f172a;
+  font-size: 32px;
 }
 
 .stat-card p {
-  margin: 8px 0 0;
+  margin: 0;
   color: #64748b;
+  font-weight: 700;
 }
 
 .admin-section {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 24px;
+  padding: 22px;
+  margin-bottom: 22px;
 }
 
 .section-header {
@@ -68,7 +137,7 @@
 
 .section-header h3 {
   margin: 0 0 6px;
-  color: #111827;
+  color: #0f172a;
   font-size: 22px;
 }
 
@@ -79,26 +148,33 @@
 
 .table-wrapper {
   overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
 }
 
 table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
-  min-width: 850px;
+  background: #fff;
 }
 
 th,
 td {
-  text-align: left;
   padding: 13px 12px;
+  text-align: left;
   border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
 }
 
+tr:last-child td {
+  border-bottom: none;
+}
+
 th {
-  color: #475569;
   background: #f8fafc;
-  font-weight: 700;
+  color: #475569;
+  font-weight: 800;
 }
 
 td {
@@ -107,28 +183,59 @@ td {
 
 .role-pill,
 .status-pill {
-  display: inline-block;
+  display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;
   background: #f1f5f9;
   color: #334155;
   font-size: 12px;
   text-transform: capitalize;
-  font-weight: 600;
+  font-weight: 800;
+}
+
+.role-pill.admin {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.role-pill.worker {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.role-pill.owner {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.open {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pill.progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.completed {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .remove-btn {
   border: none;
-  background: #dc2626;
-  color: #ffffff;
-  padding: 9px 13px;
   border-radius: 10px;
-  cursor: pointer;
+  padding: 9px 13px;
+  background: #fee2e2;
+  color: #991b1b;
   font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-.remove-btn:hover {
-  background: #b91c1c;
+.remove-btn:hover:not(:disabled) {
+  background: #fecaca;
 }
 
 .remove-btn:disabled {
@@ -138,8 +245,6 @@ td {
 }
 
 .empty-state {
-  border: 1px dashed #cbd5e1;
-  border-radius: 14px;
   padding: 24px;
   text-align: center;
   color: #64748b;
@@ -147,17 +252,46 @@ td {
 
 .empty-state h4 {
   margin: 0 0 6px;
-  color: #111827;
+  color: #0f172a;
 }
 
-@media (max-width: 900px) {
+.empty-state p {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .admin-hero {
+    flex-direction: column;
+  }
+
+  .hero-card {
+    min-width: auto;
+  }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
+  .admin-page {
+    padding: 20px;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-hero {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .admin-hero h2 {
+    font-size: 30px;
+  }
+
+  .admin-section {
+    padding: 18px;
   }
 }

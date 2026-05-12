@@ -1,11 +1,13 @@
 <app-app-shell>
   <section class="tasks-page">
-    <div class="tasks-header">
+    <div class="page-header">
       <h2>Available Tasks</h2>
-      <p>Browse available temporary jobs and find the right one for you.</p>
+      <p>Browse open temporary jobs and choose the right task for you.</p>
     </div>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="message error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
     <div class="empty-state" *ngIf="isLoading">
       <h3>Loading tasks...</h3>
@@ -16,18 +18,18 @@
       <div class="task-card" *ngFor="let task of tasks">
         <div class="task-header">
           <div>
+            <span class="task-category">{{ task.category || 'General Task' }}</span>
             <h3>{{ task.title }}</h3>
           </div>
 
-          <span
-            class="task-status"
-            [class.open]="task.status === 'open'"
-            [class.progress]="task.status === 'in-progress'"
-            [class.completed]="task.status === 'completed'"
-          >
+          <span class="task-status open">
             {{ task.status }}
           </span>
         </div>
+
+        <p class="task-description" *ngIf="task.description">
+          {{ task.description }}
+        </p>
 
         <div class="task-summary">
           <div class="summary-item">
@@ -39,18 +41,40 @@
             <span>Date</span>
             <strong>{{ task.date }}</strong>
           </div>
+
+          <div class="summary-item">
+            <span>Type</span>
+            <strong>{{ task.type }}</strong>
+          </div>
+
+          <div class="summary-item">
+            <span>Location</span>
+            <strong>{{ task.location || 'Remote' }}</strong>
+          </div>
         </div>
 
-        <a class="view-btn" [routerLink]="['/worker/task-details', task.id]">
-          View Details
-        </a>
+        <div class="skills" *ngIf="task.requiredSkills && task.requiredSkills.length > 0">
+          <span>Required Skills</span>
+
+          <div class="skills-list">
+            <small *ngFor="let skill of task.requiredSkills">
+              {{ skill }}
+            </small>
+          </div>
+        </div>
+
+        <div class="task-actions">
+          <a class="view-btn" [routerLink]="['/worker/task-details', task.id]">
+            View Details
+          </a>
+        </div>
       </div>
     </div>
 
     <ng-template #noTasks>
       <div class="empty-state" *ngIf="!isLoading">
         <h3>No tasks available</h3>
-        <p>Check back later for new opportunities.</p>
+        <p>Check back later for new open opportunities.</p>
       </div>
     </ng-template>
   </section>

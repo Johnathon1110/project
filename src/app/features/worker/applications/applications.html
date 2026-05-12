@@ -2,25 +2,56 @@
   <section class="applications-page">
     <div class="page-header">
       <h2>My Applications</h2>
-      <p>Track the tasks you have applied for.</p>
+      <p>Track the tasks you have applied for and follow your application status.</p>
     </div>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="message error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
     <div class="empty-state" *ngIf="isLoading">
       <h3>Loading applications...</h3>
       <p>Please wait.</p>
     </div>
 
-    <div class="applications-list" *ngIf="!isLoading && applications.length > 0; else noApplications">
+    <div class="applications-grid" *ngIf="!isLoading && applications.length > 0; else noApplications">
       <div class="application-card" *ngFor="let app of applications">
-        <h3>{{ app.taskTitle }}</h3>
+        <div class="application-header">
+          <div>
+            <span class="category-badge">{{ app.taskCategory }}</span>
+            <h3>{{ app.taskTitle }}</h3>
+          </div>
 
-        <div class="application-meta">
-          <span><strong>Location:</strong> {{ app.taskLocation }}</span>
-          <span><strong>Type:</strong> {{ app.taskType }}</span>
-          <span><strong>Budget:</strong> {{ app.taskBudget }} EGP</span>
-          <span><strong>Status:</strong> {{ app.status }}</span>
+          <span
+            class="status-badge"
+            [class.pending]="app.status === 'pending'"
+            [class.accepted]="app.status === 'accepted'"
+            [class.rejected]="app.status === 'rejected'"
+          >
+            {{ app.status }}
+          </span>
+        </div>
+
+        <div class="application-summary">
+          <div class="summary-item">
+            <span>Location</span>
+            <strong>{{ app.taskLocation }}</strong>
+          </div>
+
+          <div class="summary-item">
+            <span>Type</span>
+            <strong>{{ app.taskType }}</strong>
+          </div>
+
+          <div class="summary-item">
+            <span>Budget</span>
+            <strong>{{ app.taskBudget }} EGP</strong>
+          </div>
+
+          <div class="summary-item">
+            <span>Applied</span>
+            <strong>{{ app.appliedAt ? (app.appliedAt | date) : '-' }}</strong>
+          </div>
         </div>
       </div>
     </div>

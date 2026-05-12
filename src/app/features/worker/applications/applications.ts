@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { ApplicationService } from '../../../services/application.service';
@@ -40,30 +41,29 @@ export class Applications implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.applicationService.getApplicationsByWorkerId(user.id).subscribe({
-      next: (response) => {
-        console.log('Worker Applications API response:', response);
-
-        this.applications = (response.applications || []).map((app: any) => ({
-          ...app,
-          taskTitle: app.task?.title || 'Unknown Task',
-          taskLocation: app.task?.location || '-',
-          taskBudget: app.task?.budget || 0,
-          taskType: app.task?.type || '-'
-        }));
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load worker applications:', error);
-
-        this.applications = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load applications.';
-
-        this.cdr.detectChanges();
-      }
-    });
+    this.applicationService.getApplicationsByWorkerId(user.id)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.applications = (response.applications || []).map((app: any) => ({
+            ...app,
+            taskTitle: app.task?.title || 'Unknown Task',
+            taskLocation: app.task?.location || 'Remote',
+            taskBudget: app.task?.budget || 0,
+            taskType: app.task?.type || '-',
+            taskCategory: app.task?.category || 'General Task',
+            appliedAt: app.appliedAt || app.createdAt
+          }));
+        },
+        error: (error) => {
+          this.applications = [];
+          this.errorMessage = error.error?.message || 'Failed to load applications.';
+        }
+      });
   }
 }

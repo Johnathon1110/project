@@ -1,15 +1,17 @@
 .recommended-workers-page {
+  min-height: 100%;
   padding: 24px;
+  background: #f8fafc;
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .page-header h2 {
   margin: 0 0 8px;
-  font-size: 30px;
   color: #0f172a;
+  font-size: 30px;
 }
 
 .page-header p {
@@ -17,25 +19,55 @@
   color: #64748b;
 }
 
-.workers-list {
+.message {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.success {
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.error-message {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.workers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
-.worker-card {
+.worker-card,
+.empty-state {
   background: #fff;
-  padding: 18px;
-  border-radius: 18px;
   border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 20px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.worker-card {
+  transition: 0.2s ease;
+}
+
+.worker-card:hover {
+  transform: translateY(-3px);
+  border-color: #bfdbfe;
 }
 
 .worker-top {
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .worker-top h3 {
@@ -51,105 +83,147 @@
 
 .match-score {
   height: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
   background: #dcfce7;
   color: #166534;
-  padding: 7px 11px;
-  border-radius: 999px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   white-space: nowrap;
+}
+
+.match-reason {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .worker-meta {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
 
 .meta-item {
   background: #f8fafc;
+  border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 12px;
 }
 
-.meta-item span {
+.meta-item span,
+.skills > span {
   display: block;
+  margin-bottom: 6px;
   color: #94a3b8;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
-  margin-bottom: 5px;
 }
 
 .meta-item strong {
   color: #0f172a;
   font-size: 14px;
+  word-break: break-word;
 }
 
 .skills {
   margin-bottom: 16px;
 }
 
-.skills strong {
-  color: #334155;
-}
-
 .skills-list {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  gap: 8px;
 }
 
-.skill-badge {
-  background: #eef2ff;
-  color: #4338ca;
+.skills-list small {
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 800;
 }
 
 .worker-actions {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
   padding-top: 14px;
   border-top: 1px solid #e5e7eb;
 }
 
-.profile-btn,
-.message-btn {
-  text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.profile-btn {
-  background: #111827;
-  color: white;
-}
-
-.message-btn {
+.btn {
   border: none;
+  text-decoration: none;
+  border-radius: 11px;
+  padding: 9px 13px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.dark {
+  background: #0f172a;
+  color: #fff;
+}
+
+.blue {
   background: #dbeafe;
   color: #1d4ed8;
-  cursor: pointer;
+}
+
+.blue:disabled {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .empty-state {
   text-align: center;
-  padding: 30px;
-  border: 1px dashed #d1d5db;
-  border-radius: 16px;
-  background: #fff;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #64748b;
+}
+
+@media (max-width: 1000px) {
+  .workers-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 700px) {
+  .recommended-workers-page {
+    padding: 20px;
+  }
+
+  .worker-top,
+  .worker-actions {
+    flex-direction: column;
+  }
+
   .worker-meta {
     grid-template-columns: 1fr;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
   }
 }

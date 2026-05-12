@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
 import { UserRole } from '../../../models/user.model';
@@ -25,19 +26,22 @@ export class Register {
     private router: Router
   ) {
     this.registerForm = this.fb.group({
-      fullName: ['', Validators.required],
+      fullName: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       role: ['worker', Validators.required],
       phone: [''],
       location: [''],
       skills: [''],
-      experience: [''],
-      availability: ['']
+      experience: ['']
     });
   }
 
   submitRegister(): void {
+    if (this.isLoading) {
+      return;
+    }
+
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
@@ -57,45 +61,50 @@ export class Register {
       : [];
 
     const userData = {
-      fullName: formValue.fullName,
-      email: formValue.email,
-      password: formValue.password,
+      fullName: String(formValue.fullName || '').trim(),
+      email: String(formValue.email || '').trim().toLowerCase(),
+      password: String(formValue.password || ''),
       role: formValue.role as UserRole,
-      phone: formValue.phone,
-      location: formValue.location,
-      skills: skillsArray,
-      experience: formValue.experience,
-      availability: formValue.availability,
+      phone: String(formValue.phone || '').trim(),
+      location: String(formValue.location || '').trim(),
+      skills: formValue.role === 'worker' ? skillsArray : [],
+      experience: formValue.role === 'worker'
+        ? String(formValue.experience || '').trim()
+        : '',
+      availability: '',
       rating: 0
     };
 
-    this.authService.register(userData).subscribe({
-      next: (response) => {
-        this.isLoading = false;
+    this.authService.register(userData)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success || !response.user) {
+            this.errorMessage = response.message || 'Registration failed';
+            return;
+          }
 
-        if (!response.success || !response.user) {
-          this.errorMessage = response.message || 'Registration failed';
-          return;
+          this.successMessage = response.message || 'Registration successful';
+
+          const role = response.user.role;
+
+          if (role === 'worker') {
+            this.router.navigate(['/worker/dashboard']);
+          } else if (role === 'owner') {
+            this.router.navigate(['/owner/dashboard']);
+          } else if (role === 'admin') {
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Registration failed';
         }
-
-        this.successMessage = response.message || 'Registration successful';
-
-        const role = response.user.role;
-
-        if (role === 'worker') {
-          this.router.navigate(['/worker/dashboard']);
-        } else if (role === 'owner') {
-          this.router.navigate(['/owner/dashboard']);
-        } else if (role === 'admin') {
-          this.router.navigate(['/admin/dashboard']);
-        } else {
-          this.router.navigate(['/']);
-        }
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Registration failed';
-      }
-    });
+      });
   }
 }

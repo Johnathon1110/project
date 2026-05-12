@@ -2,15 +2,23 @@
   <section class="my-tasks-page">
     <div class="page-header">
       <h2>My Tasks</h2>
-      <p>View and manage the tasks you have posted.</p>
+      <p>View, edit, and manage the tasks you have posted.</p>
     </div>
 
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="message success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
 
-    <div class="empty-state" *ngIf="isLoading">
-      <h3>Loading tasks...</h3>
-      <p>Please wait.</p>
+    <div class="message error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="loading-card" *ngIf="isLoading">
+      <div class="loader"></div>
+      <div>
+        <h3>Loading tasks...</h3>
+        <p>Please wait.</p>
+      </div>
     </div>
 
     <ng-container *ngIf="!isLoading">
@@ -18,11 +26,23 @@
         <div class="task-card" *ngFor="let task of myTasks">
           <div class="task-header">
             <div>
+              <span class="task-category">{{ task.category || 'General Task' }}</span>
               <h3>{{ task.title }}</h3>
             </div>
 
-            <span class="task-status">{{ task.status }}</span>
+            <span
+              class="task-status"
+              [class.status-open]="task.status === 'open'"
+              [class.status-progress]="task.status === 'in-progress'"
+              [class.status-completed]="task.status === 'completed'"
+            >
+              {{ task.status }}
+            </span>
           </div>
+
+          <p class="task-description" *ngIf="task.description">
+            {{ task.description }}
+          </p>
 
           <div class="task-summary">
             <div class="summary-item">
@@ -34,28 +54,38 @@
               <span>Date</span>
               <strong>{{ task.date }}</strong>
             </div>
+
+            <div class="summary-item">
+              <span>Type</span>
+              <strong>{{ task.type }}</strong>
+            </div>
+
+            <div class="summary-item">
+              <span>Location</span>
+              <strong>{{ task.location || 'Remote' }}</strong>
+            </div>
           </div>
 
           <div class="task-actions">
-            <a class="details-btn" [routerLink]="['/owner/task-details', task.id]">
-              View Details
+            <button class="action-btn dark-btn" type="button" (click)="openEditTask(task)">
+              Edit Task
+            </button>
+
+            <a class="action-btn gray-btn" [routerLink]="['/owner/applicants', task.id]">
+              Applicants
             </a>
 
-            <a class="applicants-btn" [routerLink]="['/owner/applicants', task.id]">
-              View Applicants
-            </a>
-
-            <a class="recommended-btn" [routerLink]="['/owner/recommended-workers', task.id]">
-              Recommended Workers
+            <a class="action-btn blue-btn" [routerLink]="['/owner/recommended-workers', task.id]">
+              Matched Workers
             </a>
 
             <button
-              class="complete-btn"
+              class="action-btn green-btn"
               type="button"
               *ngIf="task.status !== 'completed'"
               (click)="markCompleted(task.id)"
             >
-              Mark as Completed
+              Complete
             </button>
           </div>
         </div>
@@ -66,7 +96,116 @@
       <div class="empty-state">
         <h3>No tasks posted yet</h3>
         <p>You have not posted any tasks yet.</p>
+        <a class="empty-action" routerLink="/owner/post-task">Post New Task</a>
       </div>
     </ng-template>
+
+    <div class="modal-backdrop" *ngIf="isEditModalOpen">
+      <div class="edit-modal">
+        <div class="modal-header">
+          <div>
+            <h3>Update Task</h3>
+            <p>Edit task details and save your changes.</p>
+          </div>
+
+          <button class="close-btn" type="button" (click)="closeEditModal()">×</button>
+        </div>
+
+        <form class="edit-form" [formGroup]="editTaskForm" (ngSubmit)="submitEditTask()">
+          <div class="form-group">
+            <label>Task Title</label>
+            <input type="text" formControlName="title" placeholder="Enter task title" />
+            <small class="error" *ngIf="editTaskForm.get('title')?.touched && editTaskForm.get('title')?.invalid">
+              Title must be at least 3 characters.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea
+              formControlName="description"
+              rows="4"
+              placeholder="Describe the task requirements"
+            ></textarea>
+            <small class="error" *ngIf="editTaskForm.get('description')?.touched && editTaskForm.get('description')?.invalid">
+              Description must be at least 10 characters.
+            </small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" formControlName="category" placeholder="e.g. Delivery, Cleaning" />
+              <small class="error" *ngIf="editTaskForm.get('category')?.touched && editTaskForm.get('category')?.invalid">
+                Category is required.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Type</label>
+              <select formControlName="type">
+                <option value="physical">Physical</option>
+                <option value="remote">Remote</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                formControlName="location"
+                [placeholder]="editTaskForm.get('type')?.value === 'remote' ? 'Optional for remote tasks' : 'Enter task location'"
+              />
+              <small class="error" *ngIf="editTaskForm.get('location')?.touched && editTaskForm.get('location')?.invalid">
+                Location is required for physical tasks.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Budget</label>
+              <input type="number" formControlName="budget" placeholder="Enter budget" min="1" />
+              <small class="error" *ngIf="editTaskForm.get('budget')?.touched && editTaskForm.get('budget')?.invalid">
+                Budget must be at least 1.
+              </small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" formControlName="date" />
+              <small class="error" *ngIf="editTaskForm.get('date')?.touched && editTaskForm.get('date')?.invalid">
+                Date is required.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Required Skills</label>
+              <input
+                type="text"
+                formControlName="requiredSkills"
+                placeholder="e.g. Driving, Cleaning, Time Management"
+              />
+              <small class="hint">Separate skills using commas.</small>
+              <small class="error" *ngIf="editTaskForm.get('requiredSkills')?.touched && editTaskForm.get('requiredSkills')?.invalid">
+                Required skills are required.
+              </small>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="cancel-btn" type="button" (click)="closeEditModal()" [disabled]="isSaving">
+              Cancel
+            </button>
+
+            <button class="save-btn" type="submit" [disabled]="isSaving">
+              {{ isSaving ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </section>
 </app-app-shell>

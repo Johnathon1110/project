@@ -1,21 +1,29 @@
 <app-app-shell>
   <section class="not-found-state" *ngIf="isLoading">
-    <h2>Loading task...</h2>
-    <p>Please wait.</p>
+    <div class="empty-card">
+      <h2>Loading task...</h2>
+      <p>Please wait.</p>
+    </div>
   </section>
 
   <section class="task-details-page" *ngIf="!isLoading && task; else notFound">
     <div class="details-layout">
       <main class="task-details-card">
-        <div class="task-cover"></div>
-
         <div class="task-header">
           <div>
-            <p class="task-category">{{ task.category }}</p>
+            <span class="task-category">{{ task.category || 'General Task' }}</span>
             <h2>{{ task.title }}</h2>
+            <p>{{ task.location || 'Remote' }} · {{ task.budget }} EGP</p>
           </div>
 
-          <span class="task-status">{{ task.status }}</span>
+          <span
+            class="task-status"
+            [class.status-open]="task.status === 'open'"
+            [class.status-progress]="task.status === 'in-progress'"
+            [class.status-completed]="task.status === 'completed'"
+          >
+            {{ task.status }}
+          </span>
         </div>
 
         <div class="description-card">
@@ -25,23 +33,23 @@
 
         <div class="task-info-grid">
           <div class="info-box">
-            <span class="label">Type</span>
-            <p>{{ task.type }}</p>
+            <span>Type</span>
+            <strong>{{ task.type }}</strong>
           </div>
 
           <div class="info-box">
-            <span class="label">Location</span>
-            <p>{{ task.location }}</p>
+            <span>Location</span>
+            <strong>{{ task.location || 'Remote' }}</strong>
           </div>
 
           <div class="info-box">
-            <span class="label">Budget</span>
-            <p>{{ task.budget }} EGP</p>
+            <span>Budget</span>
+            <strong>{{ task.budget }} EGP</strong>
           </div>
 
           <div class="info-box">
-            <span class="label">Date</span>
-            <p>{{ task.date }}</p>
+            <span>Date</span>
+            <strong>{{ task.date }}</strong>
           </div>
         </div>
 
@@ -62,21 +70,26 @@
           </ng-template>
         </div>
 
-        <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="message error-message" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
 
         <div class="task-actions">
-          <a *ngIf="isWorker()" routerLink="/worker/tasks" class="back-btn">
-            ← Back to Tasks
+          <a *ngIf="isWorker()" routerLink="/worker/tasks" class="btn secondary">
+            Back to Tasks
           </a>
 
-          <a *ngIf="isOwner()" routerLink="/owner/my-tasks" class="back-btn">
-            ← Back to My Tasks
+          <a *ngIf="isOwner()" routerLink="/owner/my-tasks" class="btn secondary">
+            Back to My Tasks
           </a>
 
           <button
             *ngIf="isWorker()"
-            class="primary-btn"
+            class="btn primary"
             type="button"
             (click)="applyToTask()"
             [disabled]="isApplying || hasApplied || task.status !== 'open'"
@@ -109,12 +122,17 @@
 
         <div class="summary-row">
           <span>Location</span>
-          <strong>{{ task.location }}</strong>
+          <strong>{{ task.location || 'Remote' }}</strong>
         </div>
 
         <div class="summary-row">
           <span>Category</span>
           <strong>{{ task.category }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Type</span>
+          <strong>{{ task.type }}</strong>
         </div>
       </aside>
     </div>
@@ -122,9 +140,18 @@
 
   <ng-template #notFound>
     <section class="not-found-state" *ngIf="!isLoading && !task">
-      <h2>Task not found</h2>
-      <p>{{ errorMessage || 'The task you are looking for does not exist.' }}</p>
-      <a routerLink="/worker/tasks" class="back-btn">← Back to Tasks</a>
+      <div class="empty-card">
+        <h2>Task not found</h2>
+        <p>{{ errorMessage || 'The task you are looking for does not exist.' }}</p>
+
+        <a *ngIf="isWorker()" routerLink="/worker/tasks" class="btn secondary">
+          Back to Tasks
+        </a>
+
+        <a *ngIf="isOwner()" routerLink="/owner/my-tasks" class="btn secondary">
+          Back to My Tasks
+        </a>
+      </div>
     </section>
   </ng-template>
 </app-app-shell>

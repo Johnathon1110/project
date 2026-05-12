@@ -16,6 +16,12 @@ interface NotificationResponse {
   notification?: NotificationItem;
 }
 
+interface InviteWorkerResponse {
+  success: boolean;
+  message?: string;
+  notification?: NotificationItem;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -41,12 +47,21 @@ export class NotificationService {
     );
   }
 
+  inviteWorker(taskId: number, workerId: number): Observable<InviteWorkerResponse> {
+    return this.http.post<InviteWorkerResponse>(
+      `${this.apiUrl}/invitations`,
+      {
+        taskId,
+        workerId
+      },
+      {
+        headers: this.getAuthHeaders()
+      }
+    );
+  }
+
   addNotification(userId: number, title: string, message: string): void {
-    console.warn('Notifications are now created by the backend automatically.', {
-      userId,
-      title,
-      message
-    });
+    return;
   }
 
   private getToken(): string | null {

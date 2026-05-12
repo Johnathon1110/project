@@ -55,8 +55,6 @@ export class OwnerDashboard implements OnInit {
 
     this.taskService.getTasksByOwnerId(user.id).subscribe({
       next: (taskResponse) => {
-        console.log('Owner Dashboard Tasks API response:', taskResponse);
-
         const tasks = taskResponse.tasks || [];
 
         this.totalTasks = tasks.length;

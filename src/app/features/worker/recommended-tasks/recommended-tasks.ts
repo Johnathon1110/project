@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { TaskService } from '../../../services/task.service';
@@ -35,7 +36,7 @@ export class RecommendedTasks implements OnInit {
     const currentUser: any = this.authService.getCurrentUser();
 
     if (!currentUser) {
-      this.errorMessage = 'You must be logged in to view recommended tasks.';
+      this.errorMessage = 'You must be logged in to view matched tasks.';
       this.cdr.detectChanges();
       return;
     }
@@ -54,32 +55,31 @@ export class RecommendedTasks implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.taskService.getRecommendedTasks(this.userSkills).subscribe({
-      next: (response) => {
-        console.log('Recommended Tasks API response:', response);
-
-        this.recommendedTasks = (response.recommendations || []).map((task: any) => ({
-          ...task,
-          matchedSkills: this.getMatchedSkills(task.requiredSkills || [])
-        }));
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load recommended tasks:', error);
-
-        this.recommendedTasks = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load recommended tasks.';
-
-        this.cdr.detectChanges();
-      }
-    });
+    this.taskService.getRecommendedTasks(this.userSkills)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.recommendedTasks = (response.recommendations || []).map((task: any) => ({
+            ...task,
+            matchedSkills: this.getMatchedSkills(task.requiredSkills || [])
+          }));
+        },
+        error: (error) => {
+          this.recommendedTasks = [];
+          this.errorMessage = error.error?.message || 'Failed to load matched tasks.';
+        }
+      });
   }
 
   private getUserSkills(user: any): string[] {
-    if (!user?.skills) return [];
+    if (!user?.skills) {
+      return [];
+    }
 
     if (Array.isArray(user.skills)) {
       return user.skills;

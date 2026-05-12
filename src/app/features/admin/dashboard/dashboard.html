@@ -1,48 +1,66 @@
 <app-app-shell>
   <section class="admin-page">
-    <div class="page-header">
-      <span class="admin-badge">Admin Panel</span>
-      <h2>Admin Dashboard</h2>
-      <p>View users, remove users, view tasks, and remove tasks.</p>
+    <div class="admin-hero">
+      <div>
+        <span class="admin-badge">Admin Panel</span>
+        <h2>Admin Dashboard</h2>
+        <p>Monitor users, tasks, and platform activity from one place.</p>
+      </div>
+
+      <div class="hero-card">
+        <span>SmartTask Connect</span>
+        <strong>System Control</strong>
+      </div>
     </div>
 
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="message success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="message error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
     <div class="empty-state" *ngIf="isLoading">
       <h4>Loading admin dashboard...</h4>
       <p>Please wait.</p>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" *ngIf="!isLoading">
       <div class="stat-card">
+        <span class="stat-icon">👥</span>
         <h3>{{ totalUsers }}</h3>
         <p>Total Users</p>
       </div>
 
       <div class="stat-card">
+        <span class="stat-icon">👷</span>
         <h3>{{ totalWorkers }}</h3>
         <p>Workers</p>
       </div>
 
       <div class="stat-card">
+        <span class="stat-icon">📌</span>
         <h3>{{ totalOwners }}</h3>
         <p>Task Owners</p>
       </div>
 
       <div class="stat-card">
+        <span class="stat-icon">✅</span>
         <h3>{{ totalTasks }}</h3>
         <p>Total Tasks</p>
       </div>
     </div>
 
-    <div class="admin-section">
+    <div class="admin-section" *ngIf="!isLoading">
       <div class="section-header">
-        <h3>View Users</h3>
-        <p>Manage registered workers and task owners.</p>
+        <div>
+          <h3>Users</h3>
+          <p>Manage registered workers, task owners, and admin accounts.</p>
+        </div>
       </div>
 
-      <div class="table-wrapper" *ngIf="!isLoading && users.length > 0; else noUsers">
+      <div class="table-wrapper" *ngIf="users.length > 0; else noUsers">
         <table>
           <thead>
             <tr>
@@ -58,17 +76,24 @@
           <tbody>
             <tr *ngFor="let user of users">
               <td>{{ user.id }}</td>
-              <td>{{ user.fullName }}</td>
+              <td>{{ user.fullName || user.name || '-' }}</td>
               <td>{{ user.email }}</td>
               <td>
-                <span class="role-pill">{{ user.role }}</span>
+                <span
+                  class="role-pill"
+                  [class.admin]="user.role === 'admin'"
+                  [class.worker]="user.role === 'worker'"
+                  [class.owner]="user.role === 'owner'"
+                >
+                  {{ user.role }}
+                </span>
               </td>
               <td>{{ user.location || '-' }}</td>
               <td>
                 <button
                   class="remove-btn"
                   type="button"
-                  [disabled]="user.role === 'admin'"
+                  [disabled]="user.role === 'admin' || isDeleting"
                   (click)="removeUser(user.id)"
                 >
                   {{ user.role === 'admin' ? 'Protected' : 'Remove' }}
@@ -80,20 +105,22 @@
       </div>
 
       <ng-template #noUsers>
-        <div class="empty-state" *ngIf="!isLoading">
+        <div class="empty-state">
           <h4>No users found</h4>
           <p>There are no registered users yet.</p>
         </div>
       </ng-template>
     </div>
 
-    <div class="admin-section">
+    <div class="admin-section" *ngIf="!isLoading">
       <div class="section-header">
-        <h3>View Tasks</h3>
-        <p>Monitor and remove posted tasks.</p>
+        <div>
+          <h3>Tasks</h3>
+          <p>Monitor posted tasks and remove invalid records when needed.</p>
+        </div>
       </div>
 
-      <div class="table-wrapper" *ngIf="!isLoading && tasks.length > 0; else noTasks">
+      <div class="table-wrapper" *ngIf="tasks.length > 0; else noTasks">
         <table>
           <thead>
             <tr>
@@ -112,15 +139,27 @@
             <tr *ngFor="let task of tasks">
               <td>{{ task.id }}</td>
               <td>{{ task.title }}</td>
-              <td>{{ task.category }}</td>
-              <td>{{ task.location }}</td>
+              <td>{{ task.category || '-' }}</td>
+              <td>{{ task.location || 'Remote' }}</td>
               <td>{{ task.budget }} EGP</td>
               <td>
-                <span class="status-pill">{{ task.status }}</span>
+                <span
+                  class="status-pill"
+                  [class.open]="task.status === 'open'"
+                  [class.progress]="task.status === 'in-progress'"
+                  [class.completed]="task.status === 'completed'"
+                >
+                  {{ task.status }}
+                </span>
               </td>
               <td>{{ task.ownerId }}</td>
               <td>
-                <button class="remove-btn" type="button" (click)="removeTask(task.id)">
+                <button
+                  class="remove-btn"
+                  type="button"
+                  [disabled]="isDeleting"
+                  (click)="removeTask(task.id)"
+                >
                   Remove
                 </button>
               </td>
@@ -130,7 +169,7 @@
       </div>
 
       <ng-template #noTasks>
-        <div class="empty-state" *ngIf="!isLoading">
+        <div class="empty-state">
           <h4>No tasks found</h4>
           <p>There are no posted tasks yet.</p>
         </div>

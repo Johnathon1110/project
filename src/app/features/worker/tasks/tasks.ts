@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { Task } from '../../../models/task.model';
@@ -32,27 +33,23 @@ export class Tasks implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.taskService.getAllTasks().subscribe({
-      next: (response) => {
-        console.log('Worker Tasks API response:', response);
-
-        this.tasks = response.tasks || [];
-        this.isLoading = false;
-
-        console.log('Loaded worker tasks:', this.tasks);
-        console.log('isLoading:', this.isLoading);
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load worker tasks:', error);
-
-        this.tasks = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load tasks.';
-
-        this.cdr.detectChanges();
-      }
-    });
+    this.taskService.getAllTasks()
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.tasks = (response.tasks || []).filter(
+            (task: Task) => task.status === 'open'
+          );
+        },
+        error: (error) => {
+          this.tasks = [];
+          this.errorMessage = error.error?.message || 'Failed to load tasks.';
+        }
+      });
   }
 }

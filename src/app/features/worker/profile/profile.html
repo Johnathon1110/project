@@ -39,9 +39,9 @@
           </div>
 
           <div class="stat-card">
-            <span>🏆</span>
-            <h3>Top</h3>
-            <p>Worker Level</p>
+            <span>💼</span>
+            <h3>{{ getSkills().length }}</h3>
+            <p>Skills</p>
           </div>
         </div>
 
@@ -75,12 +75,6 @@
             </div>
 
             <div class="info-item">
-              <label>Availability</label>
-              <input *ngIf="isEditing" formControlName="availability" />
-              <p *ngIf="!isEditing">{{ profileForm.value.availability || '-' }}</p>
-            </div>
-
-            <div class="info-item">
               <label>Location</label>
               <input *ngIf="isEditing" formControlName="location" />
               <p *ngIf="!isEditing">{{ profileForm.value.location || '-' }}</p>
@@ -107,9 +101,10 @@
           </div>
 
           <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+          <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-          <button *ngIf="isEditing" type="submit" class="save-btn">
-            Save Changes
+          <button *ngIf="isEditing" type="submit" class="save-btn" [disabled]="isSaving">
+            {{ isSaving ? 'Saving...' : 'Save Changes' }}
           </button>
         </form>
 
@@ -121,7 +116,7 @@
 
         <div class="review-item" *ngFor="let review of reviews">
           <div class="review-head">
-            <strong>{{ getReviewerName(review.reviewerId) }}</strong>
+            <strong>{{ getReviewerName(review) }}</strong>
             <span>{{ '⭐'.repeat(review.rating) }}</span>
           </div>
           <p>{{ review.comment }}</p>

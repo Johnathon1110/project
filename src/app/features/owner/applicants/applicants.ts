@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { ApplicationService } from '../../../services/application.service';
@@ -20,6 +21,7 @@ export class Applicants implements OnInit {
   errorMessage = '';
   taskId = 0;
   isLoading = false;
+  updatingApplicationId: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -59,54 +61,61 @@ export class Applicants implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.applicationService.getApplicationsByTaskId(this.taskId).subscribe({
-      next: (response) => {
-        console.log('Applicants API response:', response);
-
-        this.applicants = (response.applications || []).map((app: any) => ({
-          ...app,
-          workerId: app.workerId,
-          workerName: app.worker?.fullName || `Worker #${app.workerId}`,
-          workerEmail: app.worker?.email || '',
-          workerPhone: app.worker?.phone || '',
-          workerSkills: app.worker?.skills || []
-        }));
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load applicants:', error);
-
-        this.applicants = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load applicants.';
-
-        this.cdr.detectChanges();
-      }
-    });
+    this.applicationService.getApplicationsByTaskId(this.taskId)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.applicants = (response.applications || []).map((app: any) => ({
+            ...app,
+            workerName: app.worker?.fullName || `Worker #${app.workerId}`,
+            workerEmail: app.worker?.email || 'No email available',
+            workerPhone: app.worker?.phone || 'No phone available',
+            workerSkills: Array.isArray(app.worker?.skills) ? app.worker.skills : []
+          }));
+        },
+        error: (error) => {
+          this.applicants = [];
+          this.errorMessage = error.error?.message || 'Failed to load applicants.';
+        }
+      });
   }
 
   updateStatus(applicationId: number, status: 'accepted' | 'rejected'): void {
+    if (this.updatingApplicationId) {
+      return;
+    }
+
     this.successMessage = '';
     this.errorMessage = '';
+    this.updatingApplicationId = applicationId;
     this.cdr.detectChanges();
 
-    this.applicationService.updateApplicationStatus(applicationId, status).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.successMessage = response.message || `Application ${status} successfully.`;
-          this.loadApplicants();
-        } else {
-          this.errorMessage = response.message || 'Failed to update application.';
+    this.applicationService.updateApplicationStatus(applicationId, status)
+      .pipe(
+        finalize(() => {
+          this.updatingApplicationId = null;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.successMessage = status === 'accepted'
+              ? 'Application accepted successfully.'
+              : 'Application rejected successfully.';
+            this.loadApplicants();
+          } else {
+            this.errorMessage = response.message || 'Failed to update application.';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to update application.';
         }
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to update application.';
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 }

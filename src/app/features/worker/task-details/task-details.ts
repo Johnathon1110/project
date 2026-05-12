@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { Task } from '../../../models/task.model';
@@ -48,31 +49,29 @@ export class TaskDetails implements OnInit {
   loadTask(id: number): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.successMessage = '';
     this.cdr.detectChanges();
 
-    this.taskService.getTaskById(id).subscribe({
-      next: (response) => {
-        console.log('Task Details API response:', response);
+    this.taskService.getTaskById(id)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.task = response.task;
 
-        this.task = response.task;
-        this.isLoading = false;
-
-        if (this.task && this.currentUser?.role === 'worker') {
-          this.checkIfApplied(this.task.id);
+          if (this.task && this.currentUser?.role === 'worker') {
+            this.checkIfApplied(this.task.id);
+          }
+        },
+        error: (error) => {
+          this.task = undefined;
+          this.errorMessage = error.error?.message || 'Task not found.';
         }
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load task details:', error);
-
-        this.task = undefined;
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Task not found.';
-
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 
   checkIfApplied(taskId: number): void {
@@ -97,6 +96,10 @@ export class TaskDetails implements OnInit {
   }
 
   applyToTask(): void {
+    if (this.isApplying) {
+      return;
+    }
+
     if (!this.currentUser) {
       this.errorMessage = 'You must be logged in to apply.';
       this.successMessage = '';
@@ -127,28 +130,28 @@ export class TaskDetails implements OnInit {
       this.task.id,
       this.currentUser.id,
       'I am interested in this task and available to work on it.'
-    ).subscribe({
-      next: (response) => {
-        this.isApplying = false;
-
-        if (response.success) {
-          this.successMessage = response.message || 'Application submitted successfully.';
-          this.errorMessage = '';
-          this.hasApplied = true;
-        } else {
-          this.errorMessage = response.message || 'Failed to submit application.';
+    )
+      .pipe(
+        finalize(() => {
+          this.isApplying = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.successMessage = response.message || 'Application submitted successfully.';
+            this.errorMessage = '';
+            this.hasApplied = true;
+          } else {
+            this.errorMessage = response.message || 'Failed to submit application.';
+            this.successMessage = '';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to submit application.';
           this.successMessage = '';
         }
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.isApplying = false;
-        this.errorMessage = error.error?.message || 'Failed to submit application.';
-        this.successMessage = '';
-
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 }

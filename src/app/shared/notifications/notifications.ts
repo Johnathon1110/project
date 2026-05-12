@@ -43,8 +43,6 @@ export class Notifications implements OnInit {
 
     this.notificationService.getUserNotifications(user.id).subscribe({
       next: (response) => {
-        console.log('Notifications API response:', response);
-
         this.notifications = response.notifications || [];
         this.isLoading = false;
 

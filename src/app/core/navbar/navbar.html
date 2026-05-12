@@ -1,24 +1,35 @@
 <nav class="navbar">
   <div class="navbar-container">
     <div class="logo" routerLink="/">
-      <h2>SmartTask Connect</h2>
-      <p>Temporary job platform</p>
+      <div class="logo-mark">S</div>
+
+      <div>
+        <h2>SmartTask Connect</h2>
+        <p>Temporary job platform</p>
+      </div>
     </div>
 
     <div class="nav-links">
-      <a routerLink="/">Home</a>
+      <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+        Home
+      </a>
 
       <ng-container *ngIf="!isLoggedIn">
-        <a routerLink="/login">Login</a>
-        <a routerLink="/register">Register</a>
+        <a routerLink="/login" routerLinkActive="active-link">
+          Login
+        </a>
+
+        <a class="register-link" routerLink="/register" routerLinkActive="active-link">
+          Register
+        </a>
       </ng-container>
 
       <ng-container *ngIf="isLoggedIn">
-        <button type="button" class="nav-button" (click)="goToDashboard()">
+        <button type="button" class="dashboard-link" (click)="goToDashboard()">
           Dashboard
         </button>
 
-        <button type="button" class="nav-button logout-nav" (click)="logout()">
+        <button type="button" class="logout-nav" (click)="logout()">
           Logout
         </button>
       </ng-container>

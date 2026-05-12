@@ -41,7 +41,6 @@ export class Profile implements OnInit {
       role: ['', Validators.required],
       skills: ['', Validators.required],
       experience: ['', Validators.required],
-      availability: ['', Validators.required],
       location: ['', Validators.required],
       completedTasks: [0],
       rating: [0]
@@ -71,7 +70,6 @@ export class Profile implements OnInit {
       role: user.role || 'worker',
       skills: Array.isArray(user.skills) ? user.skills.join(', ') : (user.skills || ''),
       experience: user.experience || '',
-      availability: user.availability || '',
       location: user.location || '',
       completedTasks: user.completedTasks || 0,
       rating: user.rating || 0
@@ -87,8 +85,6 @@ export class Profile implements OnInit {
 
     this.reviewService.getUserReviews(userId).subscribe({
       next: (response) => {
-        console.log('Profile Reviews API response:', response);
-
         this.reviews = (response.reviews || []).filter(
           (review: any) => review.revieweeId === userId
         );
@@ -99,8 +95,6 @@ export class Profile implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Failed to load profile reviews:', error);
-
         this.reviews = [];
         this.isLoadingReviews = false;
         this.errorMessage = error.error?.message || 'Failed to load reviews.';
@@ -166,7 +160,6 @@ export class Profile implements OnInit {
       role: formValue.role,
       skills: skillsArray,
       experience: formValue.experience,
-      availability: formValue.availability,
       location: formValue.location,
       completedTasks: formValue.completedTasks,
       rating: formValue.rating

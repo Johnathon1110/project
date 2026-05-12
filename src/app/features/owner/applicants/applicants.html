@@ -1,48 +1,83 @@
 <app-app-shell>
   <section class="applicants-page">
     <div class="page-header">
-      <h2>Applicants</h2>
-      <p>People who applied for: <strong>{{ taskTitle }}</strong></p>
+      <div>
+        <span class="page-badge">Applicants</span>
+        <h2>Task Applicants</h2>
+        <p>People who applied for: <strong>{{ taskTitle }}</strong></p>
+      </div>
+
+      <div class="count-card">
+        <span>Total</span>
+        <strong>{{ applicants.length }}</strong>
+      </div>
     </div>
 
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 
     <div class="empty-state" *ngIf="isLoading">
       <h3>Loading applicants...</h3>
       <p>Please wait.</p>
     </div>
 
-    <div class="applicants-list" *ngIf="!isLoading && applicants.length > 0">
+    <div class="applicants-grid" *ngIf="!isLoading && applicants.length > 0">
       <div class="applicant-card" *ngFor="let app of applicants">
-        <h3>Worker ID: {{ app.workerId }}</h3>
+        <div class="card-top">
+          <div>
+            <h3>{{ app.workerName }}</h3>
+            <p>{{ app.workerEmail }}</p>
+          </div>
 
-        <a class="profile-btn" [routerLink]="['/owner/worker-profile', app.workerId]">
-          View Worker Profile
-        </a>
-
-        <div class="applicant-meta">
-          <span><strong>Status:</strong> {{ app.status }}</span>
-          <span><strong>Applied At:</strong> {{ app.appliedAt | date }}</span>
+          <span
+            class="status-badge"
+            [class.pending]="app.status === 'pending'"
+            [class.accepted]="app.status === 'accepted'"
+            [class.rejected]="app.status === 'rejected'"
+          >
+            {{ app.status }}
+          </span>
         </div>
 
-        <div class="actions" *ngIf="app.status === 'pending'">
-          <button class="accept-btn" type="button" (click)="updateStatus(app.id, 'accepted')">
-            Accept
-          </button>
-
-          <button class="reject-btn" type="button" (click)="updateStatus(app.id, 'rejected')">
-            Reject
-          </button>
+        <div class="meta">
+          <span><strong>Phone:</strong> {{ app.workerPhone }}</span>
+          <span><strong>Applied:</strong> {{ app.appliedAt | date }}</span>
         </div>
 
-        <div
-          class="status-badge"
-          *ngIf="app.status !== 'pending'"
-          [class.accepted]="app.status === 'accepted'"
-          [class.rejected]="app.status === 'rejected'"
-        >
-          {{ app.status }}
+        <div class="skills" *ngIf="app.workerSkills.length > 0">
+          <small *ngFor="let skill of app.workerSkills">{{ skill }}</small>
+        </div>
+
+        <p class="cover-letter" *ngIf="app.coverLetter">{{ app.coverLetter }}</p>
+
+        <div class="actions">
+          <a class="btn dark" [routerLink]="['/owner/worker-profile', app.workerId]">
+            Profile
+          </a>
+
+          <ng-container *ngIf="app.status === 'pending'">
+            <button
+              class="btn green"
+              type="button"
+              [disabled]="updatingApplicationId === app.id"
+              (click)="updateStatus(app.id, 'accepted')"
+            >
+              {{ updatingApplicationId === app.id ? 'Updating...' : 'Accept' }}
+            </button>
+
+            <button
+              class="btn red"
+              type="button"
+              [disabled]="updatingApplicationId === app.id"
+              (click)="updateStatus(app.id, 'rejected')"
+            >
+              Reject
+            </button>
+          </ng-container>
+
+          <a class="btn blue" routerLink="/chat" *ngIf="app.status === 'accepted'">
+            Chat
+          </a>
         </div>
       </div>
     </div>
@@ -50,6 +85,9 @@
     <div class="empty-state" *ngIf="!isLoading && applicants.length === 0">
       <h3>No applicants yet</h3>
       <p>No one has applied to this task yet.</p>
+      <a class="btn blue" [routerLink]="['/owner/recommended-workers', taskId]">
+        View Matched Workers
+      </a>
     </div>
   </section>
 </app-app-shell>

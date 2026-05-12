@@ -1,5 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { AdminService } from '../../../services/admin.service';
@@ -22,6 +24,7 @@ export class Dashboard implements OnInit {
   totalTasks = 0;
 
   isLoading = false;
+  isDeleting = false;
   errorMessage = '';
   successMessage = '';
 
@@ -40,9 +43,40 @@ export class Dashboard implements OnInit {
     this.successMessage = '';
     this.cdr.detectChanges();
 
-    this.adminService.getStats().subscribe({
-      next: (response) => {
-        const stats = response.stats || {};
+    const statsRequest = this.adminService.getStats().pipe(
+      catchError((error) => {
+        this.errorMessage = error.error?.message || 'Failed to load admin stats.';
+        return of({ success: false, stats: {} });
+      })
+    );
+
+    const usersRequest = this.adminService.getUsers().pipe(
+      catchError((error) => {
+        this.errorMessage = error.error?.message || 'Failed to load users.';
+        return of({ success: false, users: [] });
+      })
+    );
+
+    const tasksRequest = this.adminService.getTasks().pipe(
+      catchError((error) => {
+        this.errorMessage = error.error?.message || 'Failed to load tasks.';
+        return of({ success: false, tasks: [] });
+      })
+    );
+
+    forkJoin({
+      statsResponse: statsRequest,
+      usersResponse: usersRequest,
+      tasksResponse: tasksRequest
+    })
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe(({ statsResponse, usersResponse, tasksResponse }) => {
+        const stats = statsResponse.stats || {};
 
         this.totalUsers = stats.totalUsers || 0;
         this.totalWorkers = stats.totalWorkers || 0;
@@ -50,97 +84,85 @@ export class Dashboard implements OnInit {
         this.totalAdmins = stats.totalAdmins || 0;
         this.totalTasks = stats.totalTasks || 0;
 
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to load admin stats.';
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.adminService.getUsers().subscribe({
-      next: (response) => {
-        this.users = response.users || [];
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.users = [];
-        this.errorMessage = error.error?.message || 'Failed to load users.';
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.adminService.getTasks().subscribe({
-      next: (response) => {
-        this.tasks = response.tasks || [];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.tasks = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load tasks.';
-        this.cdr.detectChanges();
-      }
-    });
+        this.users = usersResponse.users || [];
+        this.tasks = tasksResponse.tasks || [];
+      });
   }
 
   removeUser(userId: number): void {
     const user = this.users.find((item) => item.id === userId);
 
     if (user?.role === 'admin') {
-      alert('Admin account cannot be removed.');
+      this.errorMessage = 'Admin account cannot be removed.';
+      this.successMessage = '';
+      this.cdr.detectChanges();
       return;
     }
 
     const confirmed = confirm('Are you sure you want to remove this user?');
 
-    if (!confirmed) return;
+    if (!confirmed || this.isDeleting) {
+      return;
+    }
 
+    this.isDeleting = true;
     this.successMessage = '';
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
-    this.adminService.removeUser(userId).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.successMessage = response.message || 'User removed successfully.';
-          this.loadData();
-        } else {
-          this.errorMessage = response.message || 'Failed to remove user.';
+    this.adminService.removeUser(userId)
+      .pipe(
+        finalize(() => {
+          this.isDeleting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.successMessage = response.message || 'User removed successfully.';
+            this.loadData();
+          } else {
+            this.errorMessage = response.message || 'Failed to remove user.';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to remove user.';
         }
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to remove user.';
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 
   removeTask(taskId: number): void {
     const confirmed = confirm('Are you sure you want to remove this task?');
 
-    if (!confirmed) return;
+    if (!confirmed || this.isDeleting) {
+      return;
+    }
 
+    this.isDeleting = true;
     this.successMessage = '';
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
-    this.adminService.removeTask(taskId).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.successMessage = response.message || 'Task removed successfully.';
-          this.loadData();
-        } else {
-          this.errorMessage = response.message || 'Failed to remove task.';
+    this.adminService.removeTask(taskId)
+      .pipe(
+        finalize(() => {
+          this.isDeleting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.successMessage = response.message || 'Task removed successfully.';
+            this.loadData();
+          } else {
+            this.errorMessage = response.message || 'Failed to remove task.';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to remove task.';
         }
-
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to remove task.';
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 }

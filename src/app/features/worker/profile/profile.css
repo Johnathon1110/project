@@ -15,7 +15,6 @@
   gap: 20px;
 }
 
-/* HERO */
 .profile-hero {
   background: #ffffff;
   border-radius: 28px;
@@ -23,7 +22,6 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 16px 35px rgba(15, 23, 42, 0.06);
 }
-
 
 .hero-content {
   padding: 24px 34px;
@@ -52,7 +50,6 @@
   font-weight: 800;
 }
 
-/* BUTTON */
 .edit-btn,
 .save-btn {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
@@ -70,7 +67,11 @@
   transform: translateY(-2px);
 }
 
-/* STATS */
+.save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -97,13 +98,23 @@
   color: #6b7280;
 }
 
-/* INFO */
 .info-card,
 .reviews-card {
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 28px;
   padding: 26px;
+}
+
+.info-card h3,
+.reviews-card h3 {
+  margin: 0 0 18px;
+  color: #0f172a;
+}
+
+.reviews-card > p {
+  color: #64748b;
+  margin: 0 0 18px;
 }
 
 .info-grid {
@@ -118,23 +129,35 @@
   padding: 14px;
 }
 
-.info-item label {
+.info-item label,
+.skills-section label {
+  display: block;
   font-size: 12px;
   color: #9ca3af;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
 .info-item p {
+  margin: 0;
   font-weight: 700;
+  color: #0f172a;
 }
 
-.info-item input {
+.info-item input,
+.skills-section input {
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 12px;
   padding: 10px;
+  box-sizing: border-box;
 }
 
-/* SKILLS */
+.skills-section {
+  margin-top: 18px;
+}
+
 .skills-tags {
   display: flex;
   flex-wrap: wrap;
@@ -149,7 +172,6 @@
   font-weight: 800;
 }
 
-/* REVIEWS */
 .review-item {
   background: #f9fafb;
   border-radius: 18px;
@@ -160,13 +182,36 @@
 .review-head {
   display: flex;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .review-head span {
   color: #f59e0b;
 }
 
-/* MOBILE */
+.review-item p {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.empty-reviews {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px;
+  color: #64748b;
+}
+
+.success {
+  color: #047857;
+  font-weight: 700;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 13px;
+}
+
 @media (max-width: 1000px) {
   .profile-layout {
     grid-template-columns: 1fr;

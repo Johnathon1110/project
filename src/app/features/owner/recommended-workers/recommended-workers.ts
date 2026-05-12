@@ -1,11 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AppShell } from '../../../shared/layouts/app-shell/app-shell';
 import { TaskService } from '../../../services/task.service';
-import { AuthService } from '../../../services/auth.service';
-import { ChatService } from '../../../services/chat.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-recommended-workers',
@@ -21,15 +21,16 @@ export class RecommendedWorkers implements OnInit {
   task: any = null;
 
   isLoading = false;
-  isStartingChat = false;
+  isInviting = false;
+  invitedWorkerIds: number[] = [];
+
+  successMessage = '';
   errorMessage = '';
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private taskService: TaskService,
-    private authService: AuthService,
-    private chatService: ChatService,
+    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -47,74 +48,74 @@ export class RecommendedWorkers implements OnInit {
 
   loadRecommendedWorkers(): void {
     this.isLoading = true;
+    this.successMessage = '';
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.taskService.getRecommendedWorkers(this.taskId).subscribe({
-      next: (response) => {
-        console.log('Recommended Workers API response:', response);
+    this.taskService.getRecommendedWorkers(this.taskId)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.task = response.task;
+          this.taskTitle = response.task?.title || 'Task';
 
-        this.task = response.task;
-        this.taskTitle = response.task?.title || 'Task';
+          const requiredSkills = response.task?.requiredSkills || [];
 
-        const requiredSkills = response.task?.requiredSkills || [];
-
-        this.workers = (response.recommendations || []).map((worker: any) => ({
-          ...worker,
-          matchedSkills: this.getMatchedSkills(worker.skills || [], requiredSkills)
-        }));
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load recommended workers:', error);
-
-        this.workers = [];
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to load recommended workers.';
-
-        this.cdr.detectChanges();
-      }
-    });
+          this.workers = (response.recommendations || []).map((worker: any) => ({
+            ...worker,
+            matchedSkills: worker.matchedSkills || this.getMatchedSkills(worker.skills || [], requiredSkills),
+            matchReason: worker.matchReason || ''
+          }));
+        },
+        error: (error) => {
+          this.workers = [];
+          this.errorMessage = error.error?.message || 'Failed to load matched workers.';
+        }
+      });
   }
 
-  messageWorker(workerId: number): void {
-    const owner = this.authService.getCurrentUser();
-
-    if (!owner || !this.task) {
-      this.errorMessage = 'Cannot start chat for this worker.';
-      this.cdr.detectChanges();
+  inviteWorker(workerId: number): void {
+    if (!this.taskId || !workerId || this.isInviting) {
       return;
     }
 
-    this.isStartingChat = true;
+    this.isInviting = true;
+    this.successMessage = '';
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.chatService.createConversation(
-      this.task.id,
-      this.task.title,
-      workerId,
-      owner.id
-    ).subscribe({
-      next: (response) => {
-        this.isStartingChat = false;
+    this.notificationService.inviteWorker(this.taskId, workerId)
+      .pipe(
+        finalize(() => {
+          this.isInviting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            if (!this.invitedWorkerIds.includes(workerId)) {
+              this.invitedWorkerIds = [...this.invitedWorkerIds, workerId];
+            }
 
-        if (response.success) {
-          this.router.navigate(['/chat']);
-        } else {
-          this.errorMessage = response.message || 'Failed to start chat.';
+            this.successMessage = response.message || 'Invitation sent successfully.';
+          } else {
+            this.errorMessage = response.message || 'Failed to invite worker.';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to invite worker.';
         }
+      });
+  }
 
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.isStartingChat = false;
-        this.errorMessage = error.error?.message || 'Failed to start chat.';
-        this.cdr.detectChanges();
-      }
-    });
+  isWorkerInvited(workerId: number): boolean {
+    return this.invitedWorkerIds.includes(workerId);
   }
 
   private getMatchedSkills(workerSkills: string[], requiredSkills: string[]): string[] {
