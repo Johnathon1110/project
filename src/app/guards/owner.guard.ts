@@ -12,6 +12,16 @@ export const ownerGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/worker/dashboard']);
+  if (role === 'admin') {
+    router.navigate(['/admin/dashboard']);
+    return false;
+  }
+
+  if (role === 'worker') {
+    router.navigate(['/worker/dashboard']);
+    return false;
+  }
+
+  router.navigate(['/login']);
   return false;
 };
